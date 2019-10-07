@@ -39,12 +39,15 @@ void read_msg();
 void cleanup(struct termios *oldtio_ptr, int *fd_ptr);
 
 int main(int argc, char **argv) {
-  int* fd_ptr;
-  struct termios oldtio, newtio;
+  int fd;
+  struct termios oldtio;
+  struct termios newtio;
 
+  message("setflag");
 	setup(argc, argv);
-	open_port(argv, fd_ptr);
-	set_flags(&oldtio, &newtio, fd_ptr);
+	open_port(argv, &fd);
+
+	set_flags(&oldtio, &newtio, &fd);
 
   char buf[STR_SIZE];
 	char* read_char;
@@ -53,20 +56,20 @@ int main(int argc, char **argv) {
 	// WRITE
   memset(buf, '\0', STR_SIZE);
 	gets(buf); buf[strlen(buf)] = '\0';
-  res = write(*fd_ptr, buf, (strlen(buf) + 1) * sizeof(char));
+  res = write(fd, buf, (strlen(buf) + 1) * sizeof(char));
   printf("'%s' - %d bytes written\n", buf, res);
 
 	// READ
   memset(buf, '\0', STR_SIZE);
   while (STOP == FALSE) {
-    res = read(*fd_ptr, read_char, sizeof(char));
+    res = read(fd, read_char, sizeof(char));
 		buf[n_bytes] = *read_char;
     n_bytes++;
     if (*read_char == '\0') STOP = TRUE;
   }
   printf("'%s' - %d bytes read\n", buf, n_bytes);
 
-	cleanup(&oldtio, fd_ptr);
+	cleanup(&oldtio, &fd);
 
   return 0;
 }
@@ -80,11 +83,9 @@ void setup(int argc, char **argv){
 }
 
 void open_port(char **argv, int *fd_ptr){
-	int fd;
-	fd_ptr = &fd;
 
-	fd = open(argv[1], O_RDWR | O_NOCTTY);
-  if (fd < 0) {
+	*fd_ptr = open(argv[1], O_RDWR | O_NOCTTY);
+  if (*fd_ptr < 0) {
     perror(argv[1]);
     exit(-1);
   }
@@ -92,27 +93,21 @@ void open_port(char **argv, int *fd_ptr){
 }
 
 void set_flags(struct termios *oldtio_ptr, struct termios *newtio_ptr, int *fd_ptr){
-	int fd = *fd_ptr;
-  struct termios oldtio;
-	struct termios newtio;
-	oldtio_ptr = &oldtio;
-	newtio_ptr = &newtio;
-
-  if (tcgetattr(fd, oldtio_ptr) == -1) {
+  if (tcgetattr(*fd_ptr, oldtio_ptr) == -1) {
     perror("tcgetattr");
     exit(-1);
   }
 
-  bzero(newtio_ptr, sizeof(newtio));
-  newtio.c_cflag = BAUDRATE | CS8 | CLOCAL | CREAD;
-  newtio.c_iflag = IGNPAR;
-  newtio.c_oflag = 0;
-  newtio.c_lflag = 0;
-  newtio.c_cc[VTIME] = 0;
-  newtio.c_cc[VMIN] = 1;
+  bzero(newtio_ptr, sizeof(struct termios));
+  newtio_ptr->c_cflag = BAUDRATE | CS8 | CLOCAL | CREAD;
+  newtio_ptr->c_iflag = IGNPAR;
+  newtio_ptr->c_oflag = 0;
+  newtio_ptr->c_lflag = 0;
+  newtio_ptr->c_cc[VTIME] = 0;
+  newtio_ptr->c_cc[VMIN] = 1;
 
-  tcflush(fd, TCIOFLUSH);
-  if (tcsetattr(fd, TCSANOW, newtio_ptr) == -1) {
+  tcflush(*fd_ptr, TCIOFLUSH);
+  if (tcsetattr(*fd_ptr, TCSANOW, newtio_ptr) == -1) {
     perror("tcsetattr");
     exit(-1);
   }
