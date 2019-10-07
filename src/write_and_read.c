@@ -11,6 +11,8 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <termios.h>
+#include <string.h>
+#include <stdlib.h>
 
 #define BAUDRATE B38400
 #define _POSIX_SOURCE 1
@@ -78,7 +80,8 @@ void setup(int argc, char **argv){
 }
 
 void open_port(char **argv, int *fd_ptr){
-	int fd; &fd = fd_ptr;
+	int fd;
+	fd_ptr = &fd;
 
 	fd = open(argv[1], O_RDWR | O_NOCTTY);
   if (fd < 0) {
@@ -89,16 +92,18 @@ void open_port(char **argv, int *fd_ptr){
 }
 
 void set_flags(struct termios *oldtio_ptr, struct termios *newtio_ptr, int *fd_ptr){
-	int fd; &fd = fd_ptr;
-  struct termios oldtio; &oldtio = oldtio_ptr;
-	struct termios newtio; &newtio = newtio_ptr;
+	int fd = *fd_ptr;
+  struct termios oldtio;
+	struct termios newtio;
+	oldtio_ptr = &oldtio;
+	newtio_ptr = &newtio;
 
-  if (tcgetattr(fd, &oldtio) == -1) {
+  if (tcgetattr(fd, oldtio_ptr) == -1) {
     perror("tcgetattr");
     exit(-1);
   }
 
-  bzero(&newtio, sizeof(newtio));
+  bzero(newtio_ptr, sizeof(newtio));
   newtio.c_cflag = BAUDRATE | CS8 | CLOCAL | CREAD;
   newtio.c_iflag = IGNPAR;
   newtio.c_oflag = 0;
@@ -107,7 +112,7 @@ void set_flags(struct termios *oldtio_ptr, struct termios *newtio_ptr, int *fd_p
   newtio.c_cc[VMIN] = 1;
 
   tcflush(fd, TCIOFLUSH);
-  if (tcsetattr(fd, TCSANOW, &newtio) == -1) {
+  if (tcsetattr(fd, TCSANOW, newtio_ptr) == -1) {
     perror("tcsetattr");
     exit(-1);
   }
@@ -118,7 +123,9 @@ void set_flags(struct termios *oldtio_ptr, struct termios *newtio_ptr, int *fd_p
 void write_msg();
 void read_msg();
 void cleanup(struct termios *oldtio_ptr, int *fd_ptr){
-	if (tcsetattr(fd, TCSANOW, &oldtio) == -1) {
+	int fd = *fd_ptr;
+
+	if (tcsetattr(fd, TCSANOW, oldtio_ptr) == -1) {
     perror("tcsetattr");
     exit(-1);
   }
