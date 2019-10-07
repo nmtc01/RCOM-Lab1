@@ -39,12 +39,12 @@ void read_msg();
 void cleanup(struct termios *oldtio_ptr, int *fd_ptr);
 
 int main(int argc, char **argv) {
-  int fd, c;
+  int* fd_ptr;
   struct termios oldtio, newtio;
 
 	setup(argc, argv);
-	open_port(argv, &fd);
-	set_flags(&oldtio, &newtio, &fd);
+	open_port(argv, fd_ptr);
+	set_flags(&oldtio, &newtio, fd_ptr);
 
   char buf[STR_SIZE];
 	char* read_char;
@@ -53,20 +53,20 @@ int main(int argc, char **argv) {
 	// WRITE
   memset(buf, '\0', STR_SIZE);
 	gets(buf); buf[strlen(buf)] = '\0';
-  res = write(fd, buf, (strlen(buf) + 1) * sizeof(char));
+  res = write(*fd_ptr, buf, (strlen(buf) + 1) * sizeof(char));
   printf("'%s' - %d bytes written\n", buf, res);
 
 	// READ
   memset(buf, '\0', STR_SIZE);
   while (STOP == FALSE) {
-    res = read(fd, read_char, sizeof(char));
+    res = read(*fd_ptr, read_char, sizeof(char));
 		buf[n_bytes] = *read_char;
     n_bytes++;
     if (*read_char == '\0') STOP = TRUE;
   }
   printf("'%s' - %d bytes read\n", buf, n_bytes);
 
-	cleanup(&oldtio, &fd);
+	cleanup(&oldtio, fd_ptr);
 
   return 0;
 }
