@@ -122,7 +122,7 @@ int read_msg(int *fd_ptr, unsigned char *answer) {
   int res;
   char read_char[2];
   int n_bytes = 0;
-  memset(answer, '\0', STR_SIZE);
+  //memset(answer, '\0', STR_SIZE);
   
   while (STOP == FALSE) {									//TODO
     res = read(fd, read_char, sizeof(char));				//NEED TO SEE STOP CONDITION AHEAD WITH STATE MACHINE
