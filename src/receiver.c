@@ -34,8 +34,8 @@ void message(char* message);
 void setup(int argc, char **argv);
 void open_port(char **argv, int *fd_ptr);
 void set_flags(struct termios *oldtio_ptr, struct termios *newtio_ptr, int *fd_ptr);
-int read_msg(int *fd_ptr, char *buf);
-int write_msg(int *fd_ptr, char *buf, int n_bytes);
+int read_msg(int *fd_ptr, unsigned char *buf);
+int write_msg(int *fd_ptr, unsigned char *buf, int n_bytes);
 void cleanup(struct termios *oldtio_ptr, int *fd_ptr);
 
 int main(int argc, char **argv) {
@@ -100,32 +100,34 @@ void set_flags(struct termios *oldtio_ptr, struct termios *newtio_ptr, int *fd_p
   message("Terminal flags set.");
 }
 
-int read_msg(int *fd_ptr, char *buf) {
+int read_msg(int *fd_ptr, unsigned char *request) {
   char read_char[2];
   int n_bytes = 0;
   int fd = *fd_ptr;
   int res;
 
   // READ
-  memset(buf, '\0', STR_SIZE);
+  memset(request, '\0', STR_SIZE);
   while (STOP == FALSE) {
-    res = read(fd, read_char, sizeof(char));
-	  read_char[1] = '\0';
-    buf[n_bytes] = read_char[0];
+    res = read(fd, read_char, sizeof(char));         //TODO
+	  //read_char[1] = '\0';                           //NEED TO SEE STOP CONDITION AHEAD WITH STATE MACHINE
+    request[n_bytes] = read_char[0];                 //NOW IT'S GOOD ENOUGH
     n_bytes++;
-    if (read_char[0] == '\0') STOP = TRUE;
+    //if (read_char[0] == '\0') STOP = TRUE;
+    if (n_bytes == 5) STOP = TRUE;
   }
-  printf("'%s' - %d bytes read\n", buf, n_bytes);
+  printf("%x%x%x%x%x - %d bytes read\n", request[0],request[1],request[2],request[3],request[4], n_bytes);
 
   return n_bytes;
 }
 
-int write_msg(int *fd_ptr, char *buf, int n_bytes) {
+int write_msg(int *fd_ptr, unsigned char *ans, int n_bytes) {
   int res;
   int fd = *fd_ptr;
 
-  res = write(fd, buf, n_bytes);
-  printf("'%s' - %d bytes written\n", buf, res);
+  // WRITE
+  res = write(fd, ans, n_bytes);
+  printf("%x%x%x%x%x - %d bytes written\n", ans[0],ans[1],ans[2],ans[3],ans[4], res);
 
   return res;
 }
