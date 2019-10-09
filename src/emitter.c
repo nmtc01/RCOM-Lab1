@@ -23,7 +23,7 @@
 #define FLAG 0x7E
 #define A_CMD 0x03
 #define A_ANS 0x01
-#define C 0x03
+#define C_SET 0x03
 
 // SIZES
 #define STR_SIZE 255
@@ -107,8 +107,8 @@ int write_msg(int *fd_ptr) {
   unsigned char set[5];
   set[0] = FLAG;
   set[1] = A_CMD;
-  set[2] = C;
-  set[3] = A_CMD ^ C;
+  set[2] = C_SET;
+  set[3] = A_CMD ^ C_SET;
   set[4] = FLAG;
   
   int res = write(fd, set, 5*sizeof(char));
@@ -117,23 +117,23 @@ int write_msg(int *fd_ptr) {
   return res;
 }
 
-int read_msg(int *fd_ptr, unsigned char *ans) {
+int read_msg(int *fd_ptr, unsigned char *answer) {
   int fd = *fd_ptr;
   int res;
   char read_char[2];
   int n_bytes = 0;
-  memset(ans, '\0', STR_SIZE);
+  memset(answer, '\0', STR_SIZE);
   
   while (STOP == FALSE) {									//TODO
     res = read(fd, read_char, sizeof(char));				//NEED TO SEE STOP CONDITION AHEAD WITH STATE MACHINE
 	//read_char[1] = '\0';									//NOW IT'S GOOD ENOUGH
-	ans[n_bytes] = read_char[0];
+	answer[n_bytes] = read_char[0];
     n_bytes++;
     //if (read_char[0] == '\0') STOP = TRUE;
     if (n_bytes == 5) STOP = TRUE;
   }
   
-  printf("%x%x%x%x%x - %d bytes read\n", ans[0], ans[1], ans[2], ans[3], ans[4], n_bytes);
+  printf("%x%x%x%x%x - %d bytes read\n", answer[0], answer[1], answer[2], answer[3], answer[4], n_bytes);
   
   return n_bytes;
 }
@@ -151,4 +151,5 @@ void cleanup(struct termios *oldtio_ptr, int *fd_ptr){
 }
 
 void message(char* message){printf("!--%s\n", message);}
+
 
