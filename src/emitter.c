@@ -34,8 +34,8 @@ void message(char* message);
 void setup(int argc, char **argv);
 void open_port(char **argv, int *fd_ptr);
 void set_flags(struct termios *oldtio_ptr, struct termios *newtio_ptr, int *fd_ptr);
-int write_msg(int *fd_ptr, char *buf);
-int read_msg(int *fd_ptr, char *buf);
+int write_msg(int *fd_ptr);
+int read_msg(int *fd_ptr, unsigned char *buf);
 void cleanup(struct termios *oldtio_ptr, int *fd_ptr);
 
 int main(int argc, char **argv) {
@@ -47,13 +47,12 @@ int main(int argc, char **argv) {
   open_port(argv, &fd);
   set_flags(&oldtio, &newtio, &fd);
 
-  char buf[STR_SIZE];
-
   // WRITE
-  int res = write_msg(&fd, buf);
+  int res = write_msg(&fd);
 
   // READ
-  int n_bytes = read_msg(&fd, buf);
+  char ans[STR_SIZE];
+  int n_bytes = read_msg(&fd, ans);
 
   cleanup(&oldtio, &fd);
 
@@ -101,33 +100,40 @@ void set_flags(struct termios *oldtio_ptr, struct termios *newtio_ptr, int *fd_p
   message("Terminal flags set.");
 }
 
-int write_msg(int *fd_ptr, char *buf) {
+int write_msg(int *fd_ptr) {
   int fd = *fd_ptr;
   
-  memset(buf, '\0', STR_SIZE);
-  gets(buf); buf[strlen(buf)] = '\0';
-  int res = write(fd, buf, (strlen(buf) + 1) * sizeof(char));
-  printf("'%s' - %d bytes written\n", buf, res);
+  //Create trama SET
+  unsigned char set[5];
+  set[0] = FLAG;
+  set[1] = A_CMD;
+  set[2] = C;
+  set[3] = A_CMD ^ C;
+  set[4] = FLAG;
+  
+  int res = write(fd, set, 5*sizeof(char));
+  printf("%x%x%x%x%x - %d bytes written\n", set[0], set[1], set[2], set[3], set[4], res);
   
   return res;
 }
 
-int read_msg(int *fd_ptr, char *buf) {
+int read_msg(int *fd_ptr, unsigned char *ans) {
   int fd = *fd_ptr;
   int res;
   char read_char[2];
   int n_bytes = 0;
-  memset(buf, '\0', STR_SIZE);
+  memset(ans, '\0', STR_SIZE);
   
-  while (STOP == FALSE) {
-    res = read(fd, read_char, sizeof(char));
-	read_char[1] = '\0';
-	buf[n_bytes] = read_char[0];
+  while (STOP == FALSE) {									//TODO
+    res = read(fd, read_char, sizeof(char));				//NEED TO SEE STOP CONDITION AHEAD WITH STATE MACHINE
+	//read_char[1] = '\0';									//NOW IT'S GOOD ENOUGH
+	ans[n_bytes] = read_char[0];
     n_bytes++;
-    if (read_char[0] == '\0') STOP = TRUE;
+    //if (read_char[0] == '\0') STOP = TRUE;
+    if (n_bytes == 5) STOP = TRUE;
   }
   
-  printf("'%s' - %d bytes read\n", buf, n_bytes);
+  printf("%x%x%x%x%x - %d bytes read\n", ans[0], ans[1], ans[2], ans[3], ans[4], n_bytes);
   
   return n_bytes;
 }
@@ -145,3 +151,4 @@ void cleanup(struct termios *oldtio_ptr, int *fd_ptr){
 }
 
 void message(char* message){printf("!--%s\n", message);}
+
