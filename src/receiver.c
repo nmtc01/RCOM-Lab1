@@ -23,7 +23,7 @@
 #define FLAG 0x7E
 #define A_ANS 0x03
 #define A_CMD 0x01
-#define C_SET 0x07
+#define C_UA 0x07
 
 // SIZES
 #define STR_SIZE 255
@@ -35,7 +35,7 @@ void setup(int argc, char **argv);
 void open_port(char **argv, int *fd_ptr);
 void set_flags(struct termios *oldtio_ptr, struct termios *newtio_ptr, int *fd_ptr);
 int read_msg(int *fd_ptr, unsigned char *buf);
-int write_msg(int *fd_ptr, unsigned char *buf, int n_bytes);
+int write_msg(int *fd_ptr, int n_bytes);
 void cleanup(struct termios *oldtio_ptr, int *fd_ptr);
 
 int main(int argc, char **argv) {
@@ -53,7 +53,7 @@ int main(int argc, char **argv) {
   int n_bytes = read_msg(&fd, buf);
 
   //WRITE
-  int res = write_msg(&fd, buf, n_bytes);
+  int res = write_msg(&fd, n_bytes);
 
 	cleanup(&oldtio, &fd);
   return 0;
@@ -121,13 +121,20 @@ int read_msg(int *fd_ptr, unsigned char *request) {
   return n_bytes;
 }
 
-int write_msg(int *fd_ptr, unsigned char *ans, int n_bytes) {
-  int res;
+int write_msg(int *fd_ptr, int n_bytes) {
   int fd = *fd_ptr;
 
+  //Create trama UA
+  unsigned char ua[5];
+  ua[0] = FLAG;
+  ua[1] = A_CMD;
+  ua[2] = C_UA;
+  ua[3] = A_CMD ^ C_UA;
+  ua[4] = FLAG;
+
   // WRITE
-  res = write(fd, ans, n_bytes);
-  printf("%x%x%x%x%x - %d bytes written\n", ans[0],ans[1],ans[2],ans[3],ans[4], res);
+  int res = write(fd, ua, n_bytes);
+  printf("%x%x%x%x%x - %d bytes written\n", ua[0],ua[1],ua[2],ua[3],ua[4], res);
 
   return res;
 }
@@ -145,3 +152,4 @@ void cleanup(struct termios *oldtio_ptr, int *fd_ptr){
 }
 
 void message(char* message){printf("!--%s\n", message);}
+
