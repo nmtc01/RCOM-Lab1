@@ -107,7 +107,7 @@ int read_msg(int *fd_ptr, unsigned char *request) {
   int res;
 
   // READ
-  memset(request, '\0', STR_SIZE);
+  //memset(request, '\0', STR_SIZE);
   while (STOP == FALSE) {
     res = read(fd, read_char, sizeof(char));         //TODO
 	  //read_char[1] = '\0';                           //NEED TO SEE STOP CONDITION AHEAD WITH STATE MACHINE
