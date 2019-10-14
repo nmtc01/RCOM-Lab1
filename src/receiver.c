@@ -11,8 +11,20 @@
 enum state receiving_set_state;
 enum state receiving_disc_state;
 enum state receiving_ua_state;
-int break_read_loop = 0;
+volatile sig_atomic_t break_read_loop = 0;
+volatile sig_atomic_t n_timeouts = 0;
 int received_ua = 0;
+
+void timeout_handler(){
+  if (receiving_ua_state != FINISH) {
+    received_ua = 0;
+    receiving_ua_state = START;
+    break_read_loop = 1;
+    n_timeouts++;
+  }
+
+  message("Receiver timed out.");
+}
 
 int main(int argc, char **argv) {
   int fd;
@@ -22,13 +34,16 @@ int main(int argc, char **argv) {
   setup(argc, argv);
   open_port(argv, &fd);
   set_flags(&oldtio, &newtio, &fd);
+  (void) signal(SIGALRM, timeout_handler);
 
-  char buf[STR_SIZE];
+  char set[STR_SIZE];
+  char disc[STR_SIZE];
+  char ua[STR_SIZE];
 
   //STABLISH CONNECTION
   //Read set
   message("Reading set");
-  int n_set = read_set(&fd, buf);
+  int n_set = read_set(&fd, set);
   //Write ua
   message("Writting ua");
   int res_ua = write_ua(&fd, n_set);
@@ -36,13 +51,22 @@ int main(int argc, char **argv) {
   //DISCONNECT
   //Read disc
   message("Reading disc");
-  int n_disc = read_disc(&fd, buf); //missing timeout in emitter side
-  //Write disc
-  message("Writting disc");
-  int res_disc = write_disc(&fd, n_disc); //missing timeout here
-  //Read ua
-  message("Reading ua");
-  int n_ua = read_ua(&fd, buf);
+  int n_disc = read_disc(&fd, disc); 
+  
+  while(n_timeouts < MAX_TIMEOUTS) {
+    if (!received_ua) {
+        //Write disc
+        message("Writting disc");
+        int res_disc = write_disc(&fd, n_disc); 
+        alarm(3);
+        
+        //Read ua
+        message("Reading ua");
+        int n_ua = read_ua(&fd, ua);
+        alarm(0);
+    }
+    else break;
+  }
 
   cleanup(&oldtio, &fd);
   return 0;
@@ -214,11 +238,14 @@ void cleanup(struct termios *oldtio_ptr, int *fd_ptr){
 }
 
 int read_disc(int *fd_ptr, unsigned char *request) {
-  char read_char[2];
   int n_bytes = 0;
   int fd = *fd_ptr;
   int res;
   int received_disc = 0;
+
+  char read_char[1];
+  read_char[0] = '\0';
+
   receiving_disc_state = START;
 
   // READ
@@ -309,7 +336,7 @@ int read_disc(int *fd_ptr, unsigned char *request) {
 
 int write_disc(int *fd_ptr, int n_bytes) {
   int fd = *fd_ptr;
-
+  
   //Create trama UA
   unsigned char disc[5];
   disc[0] = FLAG;
@@ -329,7 +356,10 @@ int read_ua(int *fd_ptr, unsigned char *answer) {
   int fd = *fd_ptr;
   int res;
   int n_bytes = 0;
-  char read_char[2];
+
+  char read_char[1];
+  read_char[0] = '\0';
+
   receiving_ua_state = START;
   break_read_loop = 0;
 
@@ -419,6 +449,8 @@ int read_ua(int *fd_ptr, unsigned char *answer) {
 }
 
 void message(char* message){printf("!--%s\n", message);}
+
+
 
 
 
