@@ -82,7 +82,6 @@ int read_msg(int *fd_ptr, unsigned char *request) {
 
   // READ
   while (!received_set) {
-    sleep(10);
     res = read(fd, read_char, sizeof(char));               
     request[n_bytes] = read_char[0];     
     
