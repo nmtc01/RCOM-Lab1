@@ -42,7 +42,7 @@ int main(int argc, char **argv) {
 
   setup(argc, argv);
   open_port(argv, &fd);
-  set_flags(&oldtio, &newtio, &fd);
+  set_flags(&oldtio, &newtio, fd);
   (void) signal(SIGALRM, timeout_handler);
 
   //STABLISH CONNECTION
@@ -50,12 +50,12 @@ int main(int argc, char **argv) {
     if (!received_ua) {
       //Write set
       message("Writting set");
-      int res_set = write_set(&fd);
+      int res_set = write_set(fd);
       alarm(3);
 
       //Read ua
       message("Reading ua");
-      read_ua(&fd, ua);
+      read_ua(fd, ua);
 	    alarm(0);
     }
     else break;
@@ -73,12 +73,12 @@ int main(int argc, char **argv) {
     if (!received_disc) {
       //Write disc
       message("Writting disc");
-      int res_disc = write_disc(&fd);
+      int res_disc = write_disc(fd);
       alarm(3);
 
       //Read disc
       message("Reading disc");
-      read_disc(&fd, disc);
+      read_disc(fd, disc);
       alarm(0);
     }
     else break;
@@ -90,9 +90,9 @@ int main(int argc, char **argv) {
 
   //Write ua
   message("Writting ua");
-  int res_ua = write_ua(&fd);
+  int res_ua = write_ua(fd);
 
-  cleanup(&oldtio, &fd);
+  cleanup(&oldtio, fd);
 
   return 0;
 }
@@ -117,8 +117,8 @@ void open_port(char **argv, int *fd_ptr){
 	message("Opened serial port.");
 }
 
-void set_flags(struct termios *oldtio_ptr, struct termios *newtio_ptr, int *fd_ptr){
-  if (tcgetattr(*fd_ptr, oldtio_ptr) == -1) {
+void set_flags(struct termios *oldtio_ptr, struct termios *newtio_ptr, int fd){
+  if (tcgetattr(fd, oldtio_ptr) == -1) {
     perror("tcgetattr");
     exit(-1);
   }
@@ -131,8 +131,8 @@ void set_flags(struct termios *oldtio_ptr, struct termios *newtio_ptr, int *fd_p
   newtio_ptr->c_cc[VTIME] = 0;
   newtio_ptr->c_cc[VMIN] = 1;
 
-  tcflush(*fd_ptr, TCIOFLUSH);
-  if (tcsetattr(*fd_ptr, TCSANOW, newtio_ptr) == -1) {
+  tcflush(fd, TCIOFLUSH);
+  if (tcsetattr(fd, TCSANOW, newtio_ptr) == -1) {
     perror("tcsetattr");
     exit(-1);
   }
@@ -140,9 +140,7 @@ void set_flags(struct termios *oldtio_ptr, struct termios *newtio_ptr, int *fd_p
   message("Terminal flags set.");
 }
 
-int write_set(int *fd_ptr) {
-  int fd = *fd_ptr;
-
+int write_set(int fd) {
   //Create trama SET
   unsigned char set[5];
   set[0] = FLAG;
@@ -157,8 +155,7 @@ int write_set(int *fd_ptr) {
   return res;
 }
 
-void read_ua(int *fd_ptr, unsigned char *answer) {
-  int fd = *fd_ptr;
+void read_ua(int fd, unsigned char *answer) {
   int res;
   int n_bytes = 0;
   char read_char[1];
@@ -166,11 +163,11 @@ void read_ua(int *fd_ptr, unsigned char *answer) {
 
   receiving_ua_state = START;
   break_read_loop = 0;
-  
+
   while (!break_read_loop) {
-    res = read(fd, read_char, sizeof(char));	
+    res = read(fd, read_char, sizeof(char));
     answer[n_bytes] = read_char[0];
-    
+
     switch (receiving_ua_state) {
           case START:
           {
@@ -202,7 +199,7 @@ void read_ua(int *fd_ptr, unsigned char *answer) {
                 receiving_ua_state = C_RCV;
                 n_bytes++;
             }
-            else if (read_char[0] == FLAG) { 
+            else if (read_char[0] == FLAG) {
                 receiving_ua_state = FLAG_RCV;
                 n_bytes = 1;
             }
@@ -252,9 +249,7 @@ void read_ua(int *fd_ptr, unsigned char *answer) {
   printf("%x%x%x%x%x - %d bytes read\n", answer[0], answer[1], answer[2], answer[3], answer[4], n_bytes);
 }
 
-int write_disc(int *fd_ptr) {
-  int fd = *fd_ptr;
-
+int write_disc(int fd) {
   //Create trama DISC
   unsigned char disc[5];
   disc[0] = FLAG;
@@ -269,8 +264,7 @@ int write_disc(int *fd_ptr) {
   return res;
 }
 
-void read_disc(int *fd_ptr, unsigned char *request) {
-  int fd = *fd_ptr;
+void read_disc(int fd, unsigned char *request) {
   int res;
   int n_bytes = 0;
   char read_char[1];
@@ -280,9 +274,9 @@ void read_disc(int *fd_ptr, unsigned char *request) {
   break_read_loop = 0;
 
   while (!break_read_loop) {
-    res = read(fd, read_char, sizeof(char));	
+    res = read(fd, read_char, sizeof(char));
     request[n_bytes] = read_char[0];
-    
+
     switch (receiving_disc_state) {
           case START:
           {
@@ -314,7 +308,7 @@ void read_disc(int *fd_ptr, unsigned char *request) {
                 receiving_disc_state = C_RCV;
                 n_bytes++;
             }
-            else if (read_char[0] == FLAG) { 
+            else if (read_char[0] == FLAG) {
                 receiving_disc_state = FLAG_RCV;
                 n_bytes = 1;
             }
@@ -364,9 +358,7 @@ void read_disc(int *fd_ptr, unsigned char *request) {
   printf("%x%x%x%x%x - %d bytes read\n", request[0], request[1], request[2], request[3], request[4], n_bytes);
 }
 
-int write_ua(int *fd_ptr) {
-  int fd = *fd_ptr;
-  
+int write_ua(int fd) {
   //Create trama DISC
   unsigned char ua[5];
   ua[0] = FLAG;
@@ -381,9 +373,7 @@ int write_ua(int *fd_ptr) {
   return res;
 }
 
-void cleanup(struct termios *oldtio_ptr, int *fd_ptr){
-	int fd = *fd_ptr;
-
+void cleanup(struct termios *oldtio_ptr, int fd){
 	if (tcsetattr(fd, TCSANOW, oldtio_ptr) == -1) {
     perror("tcsetattr");
     exit(-1);
@@ -393,3 +383,65 @@ void cleanup(struct termios *oldtio_ptr, int *fd_ptr){
 	message("Cleaned up terminal.");
 }
 
+/*void create_message(int fd_port){
+  int fd_file, res, out_size;
+  char buf[BUF_SIZE];
+  char* buf_out;
+
+  fd_file = open(FILE_TO_SEND, O_RDONLY | O_NONBLOCK);
+
+  // Read file into buffer
+  while(1){
+    res = read(fd_file, buf, BUF_SIZE);
+    if(res < 0){
+      message("Error reading file.");
+      // Terminate then exit
+      exit(1);
+    }
+    else if (res == 0){
+      message("Finished reading file.");
+      break;
+    }
+
+    // Check errors in message
+    check_message(buf, buf_out, &out_size);
+
+    // Write message to port
+    write_msg(fd_port, buf_out, out_size);
+  }
+
+}
+
+void check_message(char* buf, char* buf_out, int* out_size){
+  int i = 0, j = 0, n_flags = 0;
+  char bcc = 0;
+
+
+  // Count number of bytes to change
+  // While also calculating BCC
+  while(i < BUF_SIZE){
+    bcc = bcc ^ buf[i];
+    if(buf[i] == FLAG){
+      n_flags++;
+    }
+  }
+
+  // Allocate buf_out
+
+
+  // Recreate message
+
+  while(i < BUF_SIZE){
+    if(buf[i] == FLAG){
+      buf_out[]
+    }else{
+      buf_out[j] = buf[i];
+    }
+    i++; j++;
+  }
+}
+
+void write_msg(int fd_port, char* buf, int size){
+
+}
+*/
