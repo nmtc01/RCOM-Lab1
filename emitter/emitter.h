@@ -55,3 +55,5 @@ void read_disc(int *fd_ptr, unsigned char *request);
 int write_ua(int *fd_ptr);
 void cleanup(struct termios *oldtio_ptr, int *fd_ptr);
 
+
+
