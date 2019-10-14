@@ -9,6 +9,10 @@
 #include "receiver.h"
 
 enum state receiving_set_state;
+enum state receiving_disc_state;
+enum state receiving_ua_state;
+int break_read_loop = 0;
+int received_ua = 0;
 
 int main(int argc, char **argv) {
   int fd;
@@ -21,13 +25,26 @@ int main(int argc, char **argv) {
 
   char buf[STR_SIZE];
 
-  //READ
-  int n_bytes = read_msg(&fd, buf);
+  //STABLISH CONNECTION
+  //Read set
+  message("Reading set");
+  int n_set = read_set(&fd, buf);
+  //Write ua
+  message("Writting ua");
+  int res_ua = write_ua(&fd, n_set);
 
-  //WRITE
-  int res = write_msg(&fd, n_bytes);
+  //DISCONNECT
+  //Read disc
+  message("Reading disc");
+  int n_disc = read_disc(&fd, buf); //missing timeout in emitter side
+  //Write disc
+  message("Writting disc");
+  int res_disc = write_disc(&fd, n_disc); //missing timeout here
+  //Read ua
+  message("Reading ua");
+  int n_ua = read_ua(&fd, buf);
 
-	cleanup(&oldtio, &fd);
+  cleanup(&oldtio, &fd);
   return 0;
 }
 
@@ -72,7 +89,7 @@ void set_flags(struct termios *oldtio_ptr, struct termios *newtio_ptr, int *fd_p
   message("Terminal flags set.");
 }
 
-int read_msg(int *fd_ptr, unsigned char *request) {
+int read_set(int *fd_ptr, unsigned char *request) {
   char read_char[2];
   int n_bytes = 0;
   int fd = *fd_ptr;
@@ -96,7 +113,7 @@ int read_msg(int *fd_ptr, unsigned char *request) {
       }
       case FLAG_RCV:
       {
-        if (read_char[0] == A_CMD) {
+        if (read_char[0] == A_ANS) {
           receiving_set_state = A_RCV;
           n_bytes++;
         }
@@ -128,7 +145,7 @@ int read_msg(int *fd_ptr, unsigned char *request) {
       }
       case C_RCV:
       {
-        if (read_char[0] == A_CMD^C_SET) {
+        if (read_char[0] == A_ANS^C_SET) {
           receiving_set_state = BCC_OK;
           n_bytes++;
         }
@@ -166,7 +183,7 @@ int read_msg(int *fd_ptr, unsigned char *request) {
   return n_bytes;
 }
 
-int write_msg(int *fd_ptr, int n_bytes) {
+int write_ua(int *fd_ptr, int n_bytes) {
   int fd = *fd_ptr;
 
   //Create trama UA
@@ -196,5 +213,212 @@ void cleanup(struct termios *oldtio_ptr, int *fd_ptr){
 	message("Cleaned up terminal.");
 }
 
+int read_disc(int *fd_ptr, unsigned char *request) {
+  char read_char[2];
+  int n_bytes = 0;
+  int fd = *fd_ptr;
+  int res;
+  int received_disc = 0;
+  receiving_disc_state = START;
+
+  // READ
+  while (!received_disc) {
+    res = read(fd, read_char, sizeof(char));               
+    request[n_bytes] = read_char[0];     
+    
+    switch (receiving_disc_state) {
+      case START:
+      {
+        if (read_char[0] == FLAG) {
+          receiving_disc_state = FLAG_RCV;
+          n_bytes++;
+        }
+        break;
+      }
+      case FLAG_RCV:
+      {
+        if (read_char[0] == A_ANS) {
+          receiving_disc_state = A_RCV;
+          n_bytes++;
+        }
+        else if (read_char[0] == FLAG) {
+          n_bytes = 1;
+          break;
+        }
+        else {
+          receiving_disc_state = START;
+          n_bytes = 0;
+        }
+        break;
+      }
+      case A_RCV:
+      {
+        if (read_char[0] == C_DISC) {
+          receiving_disc_state = C_RCV;
+          n_bytes++;
+        }
+        else if (read_char[0] == FLAG) {
+          receiving_disc_state = FLAG_RCV;
+          n_bytes = 1;
+        }
+        else {
+          receiving_disc_state = START;
+          n_bytes = 0;
+        }
+        break;
+      }
+      case C_RCV:
+      {
+        if (read_char[0] == A_ANS^C_SET) {
+          receiving_disc_state = BCC_OK;
+          n_bytes++;
+        }
+        else if (read_char[0] == FLAG) {
+          receiving_disc_state = FLAG_RCV;
+          n_bytes = 1;
+        }
+        else {
+          receiving_disc_state = START;
+          n_bytes = 0;
+        }
+        break;
+      }
+      case BCC_OK:
+      {
+        if (read_char[0] == FLAG) {
+          receiving_disc_state = FINISH;
+          n_bytes++;
+        }
+        else {
+          receiving_disc_state = START;
+          n_bytes = 0;
+        }
+        break;
+      }
+      case FINISH:
+      {
+        received_disc = 1;
+        break;
+      }
+    }
+  }
+  printf("%x%x%x%x%x - %d bytes read\n", request[0],request[1],request[2],request[3],request[4], n_bytes);
+
+  return n_bytes;
+}
+
+int write_disc(int *fd_ptr, int n_bytes) {
+  int fd = *fd_ptr;
+
+  //Create trama UA
+  unsigned char disc[5];
+  disc[0] = FLAG;
+  disc[1] = A_CMD;
+  disc[2] = C_DISC;
+  disc[3] = A_CMD ^ C_DISC;
+  disc[4] = FLAG;
+
+  // WRITE
+  int res = write(fd, disc, n_bytes);
+  printf("%x%x%x%x%x - %d bytes written\n", disc[0],disc[1],disc[2],disc[3],disc[4], res);
+
+  return res;
+}
+
+int read_ua(int *fd_ptr, unsigned char *answer) {
+  int fd = *fd_ptr;
+  int res;
+  int n_bytes = 0;
+  char read_char[2];
+  receiving_ua_state = START;
+  break_read_loop = 0;
+
+  while (!break_read_loop) {
+    res = read(fd, read_char, sizeof(char));	
+    answer[n_bytes] = read_char[0];
+    
+    switch (receiving_ua_state) {
+          case START:
+          {
+            if (read_char[0] == FLAG) {
+                receiving_ua_state = FLAG_RCV;
+                n_bytes++;
+            }
+            break;
+          }
+          case FLAG_RCV:
+          {
+            if (read_char[0] == A_CMD) {
+                receiving_ua_state = A_RCV;
+                n_bytes++;
+            }
+            else if (read_char[0] == FLAG) {
+                n_bytes = 1;
+                break;
+            }
+            else {
+                receiving_ua_state = START;
+                n_bytes = 0;
+            }
+            break;
+          }
+          case A_RCV:
+          {
+            if (read_char[0] == C_UA) {
+                receiving_ua_state = C_RCV;
+                n_bytes++;
+            }
+            else if (read_char[0] == FLAG) { 
+                receiving_ua_state = FLAG_RCV;
+                n_bytes = 1;
+            }
+            else {
+                receiving_ua_state = START;
+                n_bytes = 0;
+            }
+            break;
+          }
+          case C_RCV:
+          {
+            if (read_char[0] == A_CMD^C_UA) {
+                receiving_ua_state = BCC_OK;
+                n_bytes++;
+            }
+            else if (read_char[0] == FLAG) {
+                receiving_ua_state = FLAG_RCV;
+                n_bytes = 1;
+            }
+            else {
+                receiving_ua_state = START;
+                n_bytes = 0;
+            }
+            break;
+          }
+          case BCC_OK:
+          {
+            if (read_char[0] == FLAG) {
+                receiving_ua_state = FINISH;
+                n_bytes++;
+            }
+            else {
+                receiving_ua_state = START;
+                n_bytes = 0;
+            }
+            break;
+          }
+          case FINISH:
+          {
+            break_read_loop = 1;
+            received_ua = 1;
+            break;
+          }
+        }
+  }
+
+  printf("%x%x%x%x%x - %d bytes read\n", answer[0], answer[1], answer[2], answer[3], answer[4], n_bytes);
+}
+
 void message(char* message){printf("!--%s\n", message);}
+
+
 
