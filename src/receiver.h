@@ -5,7 +5,8 @@
 #include <termios.h>
 #include <string.h>
 #include <stdlib.h>
-#include<unistd.h>
+#include <unistd.h>
+#include <signal.h>
 
 #define BAUDRATE B38400
 #define _POSIX_SOURCE 1
@@ -20,8 +21,9 @@
 #define C_SET 0x03
 #define C_DISC 0x0B
 
-// SIZES
+// VALUES
 #define STR_SIZE 255
+#define MAX_TIMEOUTS 3
 
 enum state {
     START,
@@ -34,7 +36,9 @@ enum state {
 
 volatile int STOP = FALSE;
 
+void timeout_handler();
 void message(char* message);
+
 void setup(int argc, char **argv);
 void open_port(char **argv, int *fd_ptr);
 void set_flags(struct termios *oldtio_ptr, struct termios *newtio_ptr, int *fd_ptr);
@@ -44,3 +48,4 @@ int read_disc(int *fd_ptr, unsigned char *request);
 int write_disc(int *fd_ptr, int n_bytes);
 int read_ua(int *fd_ptr, unsigned char *answer);
 void cleanup(struct termios *oldtio_ptr, int *fd_ptr);
+
