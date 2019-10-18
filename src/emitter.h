@@ -4,7 +4,7 @@
  * RS-232 Serial Port
  *
  * 07/10/2019
- */
+ */   
 
 #include <unistd.h>
 #include <signal.h>
@@ -48,11 +48,11 @@ void message(char* message){printf("!--%s\n", message);}
 void setup(int argc, char **argv);
 void open_port(char **argv, int *fd_ptr);
 void set_flags(struct termios *oldtio_ptr, struct termios *newtio_ptr, int *fd_ptr);
-int write_set(int *fd_ptr);
-void read_ua(int *fd_ptr, unsigned char *buf);
-int write_disc(int *fd_ptr);
-void read_disc(int *fd_ptr, unsigned char *request);
-int write_ua(int *fd_ptr);
+int write_set(int fd);
+void read_ua(int fd, unsigned char *buf);
+int write_disc(int fd);
+void read_disc(int fd, unsigned char *request);
+int write_ua(int fd);
 void cleanup(struct termios *oldtio_ptr, int fd);
 
 

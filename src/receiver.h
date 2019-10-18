@@ -42,10 +42,10 @@ void message(char* message);
 void setup(int argc, char **argv);
 void open_port(char **argv, int *fd_ptr);
 void set_flags(struct termios *oldtio_ptr, struct termios *newtio_ptr, int *fd_ptr);
-int read_set(int *fd_ptr, unsigned char *buf);
-int write_ua(int *fd_ptr, int n_bytes);
-int read_disc(int *fd_ptr, unsigned char *request);
-int write_disc(int *fd_ptr, int n_bytes);
-int read_ua(int *fd_ptr, unsigned char *answer);
-void cleanup(struct termios *oldtio_ptr, int *fd_ptr);
+int read_set(int fd, unsigned char *buf);
+int write_ua(int fd, int n_bytes);
+int read_disc(int fd, unsigned char *request);
+int write_disc(int fd, int n_bytes);
+int read_ua(int fd, unsigned char *answer);
+void cleanup(struct termios *oldtio_ptr, int fd);
 

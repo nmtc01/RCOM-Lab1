@@ -42,7 +42,7 @@ int main(int argc, char **argv) {
 
   setup(argc, argv);
   open_port(argv, &fd);
-  set_flags(&oldtio, &newtio, fd);
+  set_flags(&oldtio, &newtio, &fd);
   (void) signal(SIGALRM, timeout_handler);
 
   //STABLISH CONNECTION
@@ -92,6 +92,7 @@ int main(int argc, char **argv) {
   message("Writting ua");
   int res_ua = write_ua(fd);
 
+  //Clean up
   cleanup(&oldtio, fd);
 
   return 0;
@@ -117,8 +118,8 @@ void open_port(char **argv, int *fd_ptr){
 	message("Opened serial port.");
 }
 
-void set_flags(struct termios *oldtio_ptr, struct termios *newtio_ptr, int fd){
-  if (tcgetattr(fd, oldtio_ptr) == -1) {
+void set_flags(struct termios *oldtio_ptr, struct termios *newtio_ptr, int *fd_ptr){
+  if (tcgetattr(*fd_ptr, oldtio_ptr) == -1) {
     perror("tcgetattr");
     exit(-1);
   }
@@ -131,8 +132,8 @@ void set_flags(struct termios *oldtio_ptr, struct termios *newtio_ptr, int fd){
   newtio_ptr->c_cc[VTIME] = 0;
   newtio_ptr->c_cc[VMIN] = 1;
 
-  tcflush(fd, TCIOFLUSH);
-  if (tcsetattr(fd, TCSANOW, newtio_ptr) == -1) {
+  tcflush(*fd_ptr, TCIOFLUSH);
+  if (tcsetattr(*fd_ptr, TCSANOW, newtio_ptr) == -1) {
     perror("tcsetattr");
     exit(-1);
   }
@@ -163,11 +164,11 @@ void read_ua(int fd, unsigned char *answer) {
 
   receiving_ua_state = START;
   break_read_loop = 0;
-
+  
   while (!break_read_loop) {
-    res = read(fd, read_char, sizeof(char));
+    res = read(fd, read_char, sizeof(char));	
     answer[n_bytes] = read_char[0];
-
+    
     switch (receiving_ua_state) {
           case START:
           {
@@ -199,7 +200,7 @@ void read_ua(int fd, unsigned char *answer) {
                 receiving_ua_state = C_RCV;
                 n_bytes++;
             }
-            else if (read_char[0] == FLAG) {
+            else if (read_char[0] == FLAG) { 
                 receiving_ua_state = FLAG_RCV;
                 n_bytes = 1;
             }
@@ -274,9 +275,9 @@ void read_disc(int fd, unsigned char *request) {
   break_read_loop = 0;
 
   while (!break_read_loop) {
-    res = read(fd, read_char, sizeof(char));
+    res = read(fd, read_char, sizeof(char));	
     request[n_bytes] = read_char[0];
-
+    
     switch (receiving_disc_state) {
           case START:
           {
@@ -308,7 +309,7 @@ void read_disc(int fd, unsigned char *request) {
                 receiving_disc_state = C_RCV;
                 n_bytes++;
             }
-            else if (read_char[0] == FLAG) {
+            else if (read_char[0] == FLAG) { 
                 receiving_disc_state = FLAG_RCV;
                 n_bytes = 1;
             }
@@ -359,6 +360,7 @@ void read_disc(int fd, unsigned char *request) {
 }
 
 int write_ua(int fd) {
+
   //Create trama DISC
   unsigned char ua[5];
   ua[0] = FLAG;
@@ -382,8 +384,8 @@ void cleanup(struct termios *oldtio_ptr, int fd){
 
 	message("Cleaned up terminal.");
 }
-
-/*void create_message(int fd_port){
+/*
+void create_message(int fd_port){
   int fd_file, res, out_size;
   char buf[BUF_SIZE];
   char* buf_out;
@@ -445,3 +447,4 @@ void write_msg(int fd_port, char* buf, int size){
 
 }
 */
+

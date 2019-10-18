@@ -43,32 +43,32 @@ int main(int argc, char **argv) {
   //STABLISH CONNECTION
   //Read set
   message("Reading set");
-  int n_set = read_set(&fd, set);
+  int n_set = read_set(fd, set);
   //Write ua
   message("Writting ua");
-  int res_ua = write_ua(&fd, n_set);
+  int res_ua = write_ua(fd, n_set);
 
   //DISCONNECT
   //Read disc
   message("Reading disc");
-  int n_disc = read_disc(&fd, disc); 
+  int n_disc = read_disc(fd, disc); 
   
   while(n_timeouts < MAX_TIMEOUTS) {
     if (!received_ua) {
         //Write disc
         message("Writting disc");
-        int res_disc = write_disc(&fd, n_disc); 
+        int res_disc = write_disc(fd, n_disc); 
         alarm(3);
         
         //Read ua
         message("Reading ua");
-        int n_ua = read_ua(&fd, ua);
+        int n_ua = read_ua(fd, ua);
         alarm(0);
     }
     else break;
   }
 
-  cleanup(&oldtio, &fd);
+  cleanup(&oldtio, fd);
   return 0;
 }
 
@@ -113,10 +113,9 @@ void set_flags(struct termios *oldtio_ptr, struct termios *newtio_ptr, int *fd_p
   message("Terminal flags set.");
 }
 
-int read_set(int *fd_ptr, unsigned char *request) {
+int read_set(int fd, unsigned char *request) {
   char read_char[2];
   int n_bytes = 0;
-  int fd = *fd_ptr;
   int res;
   int received_set = 0;
   receiving_set_state = START;
@@ -207,8 +206,7 @@ int read_set(int *fd_ptr, unsigned char *request) {
   return n_bytes;
 }
 
-int write_ua(int *fd_ptr, int n_bytes) {
-  int fd = *fd_ptr;
+int write_ua(int fd, int n_bytes) {
 
   //Create trama UA
   unsigned char ua[5];
@@ -225,8 +223,7 @@ int write_ua(int *fd_ptr, int n_bytes) {
   return res;
 }
 
-void cleanup(struct termios *oldtio_ptr, int *fd_ptr){
-	int fd = *fd_ptr;
+void cleanup(struct termios *oldtio_ptr, int fd){
 
 	if (tcsetattr(fd, TCSANOW, oldtio_ptr) == -1) {
     perror("tcsetattr");
@@ -237,9 +234,8 @@ void cleanup(struct termios *oldtio_ptr, int *fd_ptr){
 	message("Cleaned up terminal.");
 }
 
-int read_disc(int *fd_ptr, unsigned char *request) {
+int read_disc(int fd, unsigned char *request) {
   int n_bytes = 0;
-  int fd = *fd_ptr;
   int res;
   int received_disc = 0;
 
@@ -334,8 +330,7 @@ int read_disc(int *fd_ptr, unsigned char *request) {
   return n_bytes;
 }
 
-int write_disc(int *fd_ptr, int n_bytes) {
-  int fd = *fd_ptr;
+int write_disc(int fd, int n_bytes) {
   
   //Create trama UA
   unsigned char disc[5];
@@ -352,8 +347,7 @@ int write_disc(int *fd_ptr, int n_bytes) {
   return res;
 }
 
-int read_ua(int *fd_ptr, unsigned char *answer) {
-  int fd = *fd_ptr;
+int read_ua(int fd, unsigned char *answer) {
   int res;
   int n_bytes = 0;
 
