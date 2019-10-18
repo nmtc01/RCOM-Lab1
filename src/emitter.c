@@ -103,7 +103,6 @@ void setup(int argc, char **argv){
     printf("Usage:\tnserial SerialPort\n\tex: nserial /dev/ttyS1\n");
     exit(1);
   }
-  (void) signal(SIGALRM, timeout_handler);
 
 	message("Checked arguments");
 }
