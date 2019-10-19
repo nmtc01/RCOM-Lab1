@@ -19,6 +19,7 @@ struct termios newtio;
 enum state receiving_ua_state;
 enum state receiving_set_state;
 enum state receiving_disc_state;
+enum dataState receiving_data_state;
 
 void message(char* message){
     printf("!--%s\n", message);
@@ -550,4 +551,83 @@ void cleanup(int fd){
     close(fd);
 
     message("Cleaned up terminal.");
+}
+
+int sendITramas(int fd, char *buffer, int length) {
+    //Initial sequenceNumber
+    datalink.sequenceNumber = 0;
+
+    //Create trama
+    char trama[6+length];
+    u_int8_t bcc2 = 0x00;
+    trama[0] = FLAG;
+    trama[1] = A_CMD;
+    if (datalink.sequenceNumber)
+        trama[2] = C_1;
+    else trama[2] = C_0;
+    trama[3] = A_CMD^trama[2];
+    
+    for (int i = 0; i < length; i++) {
+        trama[4+i] = buffer[i];
+        bcc2 = bcc2 ^ buffer[i];
+    }
+    trama[4+length] = bcc2;
+    trama[5+length] = FLAG;
+
+    //Stuffing
+    int new_bytes = 0;
+    int nr_bytes = 6+length;
+
+    char *stuf = malloc(nr_bytes);
+    
+    stuf[0] = trama[0];
+    for (int j = 1; j < sizeof(trama)-1; j++) {
+        if (trama[j] == FLAG) {
+            nr_bytes++;
+            new_bytes++;
+            stuf = (char *)realloc(stuf, nr_bytes);
+            stuf[j+new_bytes-1] = ESCAPE;
+            stuf[j+new_bytes] = FLAG^0x20;
+        }
+        else if (trama[j] == ESCAPE) {
+            nr_bytes++;
+            new_bytes++;
+            stuf = (char *)realloc(stuf, nr_bytes);
+            stuf[j+new_bytes] = ESCAPE^0x20;
+        }
+        else stuf[j+new_bytes] = trama[j];
+    }
+    stuf[nr_bytes-1] = FLAG;
+
+    //Write trama
+    int res = write(fd, stuf, nr_bytes);
+
+    for (int i = 0; i < nr_bytes-1; i++) {
+        printf("%x", stuf[i]);
+    }
+    printf("%x - %d data bytes written\n", stuf[nr_bytes-1], length);
+
+    return length;
+}
+
+int receiveITramas(int fd, char *buffer) {
+    /*char trama[STR_SIZE];
+    int res;
+    int n_bytes = 0;
+    char read_char[1];
+    read_char[0] = '\0';
+    
+    receiving_data_state = START;
+    break_read_loop = 0;
+
+    while (!break_read_loop) {
+        res = read(fd, read_char, sizeof(char));	
+        trama[n_bytes] = read_char[0];
+        
+        switch (receiving_data_state) {
+            //TODO
+        }
+    }*/
+
+    return 0; //TODO change this
 }
