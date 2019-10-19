@@ -382,7 +382,7 @@ int sendDiscTramas(int fd, int status) {
                 read_disc(fd, status);
                 alarm(0);
             }
-        else break;
+            else break;
         }
 
         //Stop execution if could not stablish connection after MAX_TIMEOUTS
@@ -453,7 +453,7 @@ void read_disc(int fd, int status) {
     if (status == TRANSMITTER)
         A = A_ANS;
     else A = A_CMD;
-
+    
     receiving_disc_state = START;
     break_read_loop = 0;
 
