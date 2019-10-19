@@ -15,7 +15,6 @@ struct appLayer {
 };
 
 //Open
-void message(char* message);
 void setup(int argc, char **argv);
 int llopen(int port, int status);
 

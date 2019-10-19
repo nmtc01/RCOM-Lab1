@@ -49,6 +49,7 @@ struct linkLayer {
     unsigned int numTransmissions;
 };
 
+void message(char* message);
 int open_port(int port);
 void set_flags(int fd);
 void cleanup(int fd);

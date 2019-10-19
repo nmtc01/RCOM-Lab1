@@ -20,6 +20,10 @@ enum state receiving_ua_state;
 enum state receiving_set_state;
 enum state receiving_disc_state;
 
+void message(char* message){
+    printf("!--%s\n", message);
+}
+
 int open_port(int port){
     int fd;
 
