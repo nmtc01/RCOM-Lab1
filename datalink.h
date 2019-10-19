@@ -17,7 +17,6 @@
 #include <stdlib.h>
 
 #define BAUDRATE        B38400
-#define MAX_TIMEOUTS    3
 #define STR_SIZE        255
 #define TRANSMITTER     12
 #define RECEIVER        21
@@ -41,12 +40,26 @@ enum state {
     FINISH
 };
 
+//Datalinker struct
+struct linkLayer {
+    char port[11];
+    int baudRate;
+    unsigned int sequenceNumber;
+    unsigned int timeout;
+    unsigned int numTransmissions;
+};
+
 int open_port(int port);
-void set_flags(struct termios *oldtio_ptr, struct termios *newtio_ptr, int fd);
+void set_flags(int fd);
+void cleanup(int fd);
 void timeout_handler();
+
 int sendStablishTramas(int fd, int status);
+int sendDiscTramas(int fd, int status);
 
 int write_set(int fd);
-void read_ua(int fd);
+void read_ua(int fd, int status);
 void read_set(int fd);
-int write_ua(int fd);
+int write_ua(int fd, int status);
+int write_disc(int fd, int status);
+void read_disc(int fd, int status);

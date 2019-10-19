@@ -32,6 +32,10 @@ int main(int argc, char **argv) {
         return -1;
     }
 
+    //Finish communication
+    if (llclose(application.fd_port, application.status) < 0)
+        return -1;
+
     return 0;       
 }
 
@@ -56,11 +60,6 @@ int llopen(int port, int status) {
     if (fd < 0)
         return -1;
 
-    //Set flags
-    struct termios oldtio;
-    struct termios newtio;
-    set_flags(&oldtio, &newtio, fd);
-
     //Tramas set and ua
     int res = sendStablishTramas(fd, status);
     //Check errors
@@ -68,4 +67,14 @@ int llopen(int port, int status) {
         return -1;
 
     return fd;
+}
+
+int llclose(int fd, int status) {
+    int res = sendDiscTramas(fd, status);
+    if (res < 0)
+        return -1;
+
+    cleanup(fd);
+
+    return 1;
 }

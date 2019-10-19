@@ -26,4 +26,4 @@ int llwrite(int fd, char *buffer, int length);
 int llread(int fd, char *buffer);
 
 //Close
-int llclose(int fd);
+int llclose(int fd, int status);
