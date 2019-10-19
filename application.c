@@ -41,7 +41,7 @@ int main(int argc, char **argv) {
 
 void setup(int argc, char **argv){
 	if ((argc != 3) || ((strcmp("/dev/ttyS0", argv[2]) != 0) && (strcmp("/dev/ttyS1", argv[2]) != 0))) {
-        printf("Usage:\tnserial transmitter|receiver SerialPort\n\tex: nserial /dev/ttyS0\n");
+        printf("Usage:\tnserial transmitter|receiver SerialPort\n\tex: nserial transmitter /dev/ttyS0\n");
         exit(1);
     }
 
