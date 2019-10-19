@@ -88,7 +88,7 @@ int sendStablishTramas(int fd, int status){
     (void) signal(SIGALRM, timeout_handler);
     datalink.numTransmissions = 3;
     datalink.timeout = 1;
-    
+
     if (status == TRANSMITTER) {
         //Transmitter
 
@@ -164,7 +164,7 @@ void read_ua(int fd, int status) {
     if (status == TRANSMITTER)
         A = A_CMD;
     else A = A_ANS;
-    
+
     while (!break_read_loop) {
         res = read(fd, read_char, sizeof(char));	
         ua[n_bytes] = read_char[0];
@@ -244,7 +244,7 @@ void read_ua(int fd, int status) {
                 received_ua = 1;
                 break;
             }
-            }
+        }
     }
 
     printf("%x%x%x%x%x - %d bytes read\n", ua[0], ua[1], ua[2], ua[3], ua[4], n_bytes);
@@ -344,17 +344,17 @@ void read_set(int fd) {
 }
 
 int write_ua(int fd, int status) {
-
+    
     //Create trama UA
     unsigned char ua[5];
     ua[0] = FLAG;
     if (status == TRANSMITTER)
-        ua[1] = A_CMD;
-    else ua[1] = A_ANS;
+        ua[1] = A_ANS;
+    else ua[1] = A_CMD;
     ua[2] = C_UA;
     if (status == TRANSMITTER)
-        ua[3] = A_CMD ^ C_UA;
-    else ua[3] = A_ANS ^ C_UA;
+        ua[3] = A_ANS ^ C_UA;
+    else ua[3] = A_CMD ^ C_UA;
     ua[4] = FLAG;
 
     // WRITE
