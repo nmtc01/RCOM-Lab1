@@ -88,7 +88,7 @@ int sendStablishTramas(int fd, int status){
     (void) signal(SIGALRM, timeout_handler);
     datalink.numTransmissions = 3;
     datalink.timeout = 1;
-
+    
     if (status == TRANSMITTER) {
         //Transmitter
 

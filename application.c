@@ -15,7 +15,7 @@ int main(int argc, char **argv) {
 
     //Application struct
     struct appLayer application;
-    if (argv[1] == "transmitter")
+    if (strcmp(argv[1], "transmitter") == 0)
         application.status = TRANSMITTER;
     else application.status = RECEIVER;
 
