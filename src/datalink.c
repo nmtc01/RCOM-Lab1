@@ -790,7 +790,9 @@ int write_rr(int fd) {
     if (datalink.sequenceNumber)
         rr[2] = C_RR0;
     else rr[2] = C_RR1;
-    rr[3] = A_CMD^rr[2];
+    if (datalink.sequenceNumber)
+        rr[3] = A_CMD^C_RR0;
+    else rr[3] = C_RR1;
     rr[4] = FLAG;
 
     int res = write(fd, rr, 5*sizeof(char));
@@ -801,7 +803,7 @@ int write_rr(int fd) {
 
 void read_rr(int fd) {
     char rr[STR_SIZE];
-    char c_rr[1];
+    u_int8_t c_rr;
     int res;
     int n_bytes = 0;
     char read_char[1];
@@ -842,9 +844,9 @@ void read_rr(int fd) {
             case A_RCV:
             {
                 if (datalink.sequenceNumber)
-                    c_rr[0] = C_RR0;
-                else c_rr[0] = C_RR1;
-                if (read_char[0] == c_rr[0]) {
+                    c_rr = C_RR0;
+                else c_rr = C_RR1;
+                if (read_char[0] == c_rr) {
                     receiving_rr_state = C_RCV;
                     n_bytes++;
                 }
@@ -860,7 +862,7 @@ void read_rr(int fd) {
             }
             case C_RCV:
             {
-                if (read_char[0] == A_CMD^c_rr[0]) {
+                if (read_char[0] == A_CMD^c_rr) {
                     receiving_rr_state = BCC_OK;
                     n_bytes++;
                 }
