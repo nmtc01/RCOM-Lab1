@@ -19,6 +19,7 @@ struct termios newtio;
 enum state receiving_ua_state;
 enum state receiving_set_state;
 enum state receiving_disc_state;
+enum state receiving_rr_state;
 enum dataState receiving_data_state;
 
 void message(char* message){
@@ -557,6 +558,30 @@ int sendITramas(int fd, char *buffer, int length) {
     //Initial sequenceNumber
     datalink.sequenceNumber = 0;
 
+    //Write trama I
+    message("Writting Trama I");
+    int res_i = write_i(fd, buffer, length);
+
+    //Read trama RR
+    message("Reading Trama RR");
+    read_rr(fd);
+
+    return res_i;
+}
+
+int receiveITramas(int fd, char *buffer) {
+    //Read trama I
+    message("Reading Trama I");
+    int data_bytes = read_i(fd, buffer);
+
+    //Write trama RR
+    message("Writting Trama RR");
+    int res_rr = write_rr(fd);
+
+    return data_bytes;
+}
+
+int write_i(int fd, char *buffer, int length) {
     //Create trama
     char trama[6+length];
     u_int8_t bcc2 = 0x00;
@@ -599,7 +624,7 @@ int sendITramas(int fd, char *buffer, int length) {
     }
     stuf[nr_bytes-1] = FLAG;
 
-    //Write trama
+    //Write trama I
     int res = write(fd, stuf, nr_bytes);
 
     for (int i = 0; i < nr_bytes-1; i++) {
@@ -610,7 +635,7 @@ int sendITramas(int fd, char *buffer, int length) {
     return length;
 }
 
-int receiveITramas(int fd, char *buffer) {
+int read_i(int fd, char *buffer) {
     char trama[STR_SIZE];
     char data[4];
     int res;
@@ -754,4 +779,120 @@ int receiveITramas(int fd, char *buffer) {
     printf("%x - %d data bytes read\n", trama[n_bytes-1], data_bytes);
 
     return data_bytes; 
+}
+
+int write_rr(int fd) {
+
+    //Create trama rr
+    unsigned char rr[5];
+    rr[0] = FLAG;
+    rr[1] = A_CMD;
+    if (datalink.sequenceNumber)
+        rr[2] = C_RR0;
+    else rr[2] = C_RR1;
+    rr[3] = A_CMD^rr[2];
+    rr[4] = FLAG;
+
+    int res = write(fd, rr, 5*sizeof(char));
+    printf("%x%x%x%x%x - %d bytes written\n", rr[0], rr[1], rr[2], rr[3], rr[4], res);
+
+    return res;
+}
+
+void read_rr(int fd) {
+    char rr[STR_SIZE];
+    char c_rr[1];
+    int res;
+    int n_bytes = 0;
+    char read_char[1];
+    read_char[0] = '\0';
+    
+    receiving_rr_state = START;
+    break_read_loop = 0;
+
+    while (!break_read_loop) {
+        res = read(fd, read_char, sizeof(char));	
+        rr[n_bytes] = read_char[0];
+        
+        switch (receiving_rr_state) {
+            case START:
+            {
+                if (read_char[0] == FLAG) {
+                    receiving_rr_state = FLAG_RCV;
+                    n_bytes++;
+                }
+                break;
+            }
+            case FLAG_RCV:
+            {
+                if (read_char[0] == A_CMD) {
+                    receiving_rr_state = A_RCV;
+                    n_bytes++;
+                }
+                else if (read_char[0] == FLAG) {
+                    n_bytes = 1;
+                    break;
+                }
+                else {
+                    receiving_rr_state = START;
+                    n_bytes = 0;
+                }
+                break;
+            }
+            case A_RCV:
+            {
+                if (datalink.sequenceNumber)
+                    c_rr[0] = C_RR0;
+                else c_rr[0] = C_RR1;
+                if (read_char[0] == c_rr[0]) {
+                    receiving_rr_state = C_RCV;
+                    n_bytes++;
+                }
+                else if (read_char[0] == FLAG) { 
+                    receiving_rr_state = FLAG_RCV;
+                    n_bytes = 1;
+                }
+                else {
+                    receiving_rr_state = START;
+                    n_bytes = 0;
+                }
+                break;
+            }
+            case C_RCV:
+            {
+                if (read_char[0] == A_CMD^c_rr[0]) {
+                    receiving_rr_state = BCC_OK;
+                    n_bytes++;
+                }
+                else if (read_char[0] == FLAG) {
+                    receiving_rr_state = FLAG_RCV;
+                    n_bytes = 1;
+                }
+                else {
+                    receiving_rr_state = START;
+                    n_bytes = 0;
+                }
+                break;
+            }
+            case BCC_OK:
+            {
+                if (read_char[0] == FLAG) {
+                    receiving_rr_state = FINISH;
+                    n_bytes++;
+                }
+                else {
+                    receiving_rr_state = START;
+                    n_bytes = 0;
+                }
+                break;
+            }
+            case FINISH:
+            {
+                break_read_loop = 1;
+                break;
+            }
+            }
+    }
+
+    printf("%x%x%x%x%x - %d bytes read\n", rr[0], rr[1], rr[2], rr[3], rr[4], n_bytes);
 }
