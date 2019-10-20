@@ -106,11 +106,11 @@ int readFile(char *msg) {
 
     //open an existing file for reading
     file = fopen(FILE_TO_SEND, "r");
-
+    
     //quit if the file does not exist
     if (file == NULL) 
         return -1;
-
+    
     //get the number of bytes
     if (fseek(file, 0L, SEEK_END))
         return -1;

@@ -8,7 +8,7 @@
 
 #include "datalink.h"
 
-#define FILE_TO_SEND "/src/images/pinguim.gif"
+#define FILE_TO_SEND "images/pinguim.gif"
 #define CNTRL_START  2
 #define CNTRL_END    3
 
