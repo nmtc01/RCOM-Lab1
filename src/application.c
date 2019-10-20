@@ -100,7 +100,7 @@ int llopen(int port, int status) {
     return fd;
 }
 
-int readFile(char *file) {
+int readFile(char *msg) {
     FILE *file;
     int numbytes;
 
@@ -164,6 +164,8 @@ int llclose(int fd, int status) {
     TODO -> Finish sendITramas and receiveITramas:
     fazer primeira experiência de mandar apenas "ola" dentro dos dados da trama I
     depois:
+    timeout nas tramas I
+    RR e ACK
     colocar a ler o ficheiro 
     colocar em loop o sendITramas
     colocar a mandar as tramas como é suposto

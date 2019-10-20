@@ -33,6 +33,7 @@
 #define C_0 0x00
 #define C_1 0x40
 #define ESCAPE 0x7D
+#define STUF 0x20
 
 enum state {
     START,
@@ -44,15 +45,15 @@ enum state {
 };
 
 enum dataState {
-    START,
-    FLAG_RCV,
-    A_RCV,
-    C_RCV,
-    BCC1_OK,
-    DATA_RCV,
-    BCC2_OK,
-    FINISH,
-    ESCAPE_RCV
+    START_I,
+    FLAG_RCV_I,
+    A_RCV_I,
+    C_RCV_I,
+    BCC1_OK_I,
+    DATA_RCV_I,
+    BCC2_OK_I,
+    FINISH_I,
+    ESCAPE_RCV_I
 };
 
 //Datalinker struct
@@ -73,6 +74,7 @@ void timeout_handler();
 int sendStablishTramas(int fd, int status);
 int sendDiscTramas(int fd, int status);
 int sendITramas(int fd, char *buffer, int length);
+int receiveITramas(int fd, char *buffer);
 
 int write_set(int fd);
 void read_ua(int fd, int status);

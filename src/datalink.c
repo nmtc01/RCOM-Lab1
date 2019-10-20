@@ -587,13 +587,13 @@ int sendITramas(int fd, char *buffer, int length) {
             new_bytes++;
             stuf = (char *)realloc(stuf, nr_bytes);
             stuf[j+new_bytes-1] = ESCAPE;
-            stuf[j+new_bytes] = FLAG^0x20;
+            stuf[j+new_bytes] = FLAG^STUF;
         }
         else if (trama[j] == ESCAPE) {
             nr_bytes++;
             new_bytes++;
             stuf = (char *)realloc(stuf, nr_bytes);
-            stuf[j+new_bytes] = ESCAPE^0x20;
+            stuf[j+new_bytes] = ESCAPE^STUF;
         }
         else stuf[j+new_bytes] = trama[j];
     }
@@ -611,13 +611,15 @@ int sendITramas(int fd, char *buffer, int length) {
 }
 
 int receiveITramas(int fd, char *buffer) {
-    /*char trama[STR_SIZE];
+    char trama[STR_SIZE];
+    char data[4];
     int res;
     int n_bytes = 0;
+    int data_bytes = 0;
     char read_char[1];
     read_char[0] = '\0';
     
-    receiving_data_state = START;
+    receiving_data_state = START_I;
     break_read_loop = 0;
 
     while (!break_read_loop) {
@@ -625,9 +627,131 @@ int receiveITramas(int fd, char *buffer) {
         trama[n_bytes] = read_char[0];
         
         switch (receiving_data_state) {
-            //TODO
+            case START_I:
+            {
+                if (read_char[0] == FLAG) {
+                    receiving_data_state = FLAG_RCV_I;
+                    n_bytes++;
+                }
+                break;
+            }
+            case FLAG_RCV_I:
+            {
+                if (read_char[0] == A_CMD) {
+                    receiving_data_state = A_RCV_I;
+                    n_bytes++;
+                }
+                else if (read_char[0] == FLAG) {
+                    n_bytes = 1;
+                    break;
+                }
+                else {
+                    receiving_data_state = START_I;
+                    n_bytes = 0;
+                }
+                break;
+            }
+            case A_RCV_I:
+            {
+                if (read_char[0] == C_0 || read_char[0] == C_1) {
+                    receiving_data_state = C_RCV_I;
+                    n_bytes++;
+                }
+                else if (read_char[0] == FLAG) {
+                    receiving_data_state = FLAG_RCV_I;
+                    n_bytes = 1;
+                    break;
+                }
+                else {
+                    receiving_data_state = START_I;
+                    n_bytes = 0;
+                }
+                break;
+            }
+            case C_RCV_I:
+            {
+                if (read_char[0] == A_CMD^C_0 || read_char[0] == A_CMD^C_1) {
+                    receiving_data_state = BCC1_OK_I;
+                    n_bytes++;
+                }
+                else if (read_char[0] == FLAG) {
+                    receiving_data_state = FLAG_RCV_I;
+                    n_bytes = 1;
+                }
+                else {
+                    receiving_data_state = START_I;
+                    n_bytes = 0;
+                }
+                break;
+            }
+            case BCC1_OK_I:
+            {
+                if (read_char[0] == ESCAPE) {
+                    receiving_data_state = ESCAPE_RCV_I;
+                }
+                else {
+                    receiving_data_state = DATA_RCV_I;
+                    data[data_bytes] = trama[n_bytes];
+                    n_bytes++;
+                    data_bytes++;
+                }
+                break;
+            }
+            case DATA_RCV_I:
+            {
+                u_int8_t bcc2 = 0;
+                for (int i = n_bytes - data_bytes; i < n_bytes; i++) {
+                    bcc2 = bcc2^trama[i];
+                }
+                if (read_char[0] == bcc2) {
+                    receiving_data_state = BCC2_OK_I;
+                    n_bytes++;
+                }
+                else if (read_char[0] == ESCAPE) {
+                    receiving_data_state = ESCAPE_RCV_I;
+                }
+                else {
+                    data[data_bytes] = trama[n_bytes];
+                    n_bytes++;
+                    data_bytes++;
+                }
+                break;
+            }
+            case BCC2_OK_I:
+            {
+                if (read_char[0] == FLAG) {
+                    receiving_data_state = FINISH_I;
+                    n_bytes++;
+                }
+                else {
+                    receiving_data_state = START_I;
+                    n_bytes = 0;
+                }
+                break;
+            }
+            case FINISH_I:
+            {
+                break_read_loop = 1;
+                break;
+            }
+            case ESCAPE_RCV_I:
+            {
+                receiving_data_state = DATA_RCV_I;
+                trama[n_bytes] = read_char[0]^STUF;
+                data[data_bytes] = trama[n_bytes];
+                data_bytes++;
+                n_bytes++;
+                break;
+            }
         }
-    }*/
+    }
 
-    return 0; //TODO change this
+    strcpy(buffer, data);
+
+    for (int i = 0; i < n_bytes-1; i++) {
+        printf("%x", trama[i]);
+    }
+    printf("%x - %d data bytes written\n", trama[n_bytes-1], data_bytes);
+
+    return data_bytes; 
 }
