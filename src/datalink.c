@@ -751,7 +751,7 @@ int receiveITramas(int fd, char *buffer) {
     for (int i = 0; i < n_bytes-1; i++) {
         printf("%x", trama[i]);
     }
-    printf("%x - %d data bytes written\n", trama[n_bytes-1], data_bytes);
+    printf("%x - %d data bytes read\n", trama[n_bytes-1], data_bytes);
 
     return data_bytes; 
 }

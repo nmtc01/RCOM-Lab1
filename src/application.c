@@ -44,7 +44,7 @@ int main(int argc, char **argv) {
             return -1;
         }
 
-        char msg_to_send[4] = "ola";
+        char msg_to_send[4] = "seu";
         message("Started llwrite");
         int n_chars_written = llwrite(application.fd_port, msg_to_send, 4*sizeof(char));
         if (n_chars_written < 0) {
