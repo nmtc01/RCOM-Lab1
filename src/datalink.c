@@ -646,10 +646,13 @@ int read_i(int fd, char *buffer) {
     
     receiving_data_state = START_I;
     break_read_loop = 0;
+    int received_second_flag = 0;
 
     while (!break_read_loop) {
-        res = read(fd, read_char, sizeof(char));	
-        trama[n_bytes] = read_char[0];
+        if (!received_second_flag) {
+            res = read(fd, read_char, sizeof(char));	
+            trama[n_bytes] = read_char[0];
+        }
         
         switch (receiving_data_state) {
             case START_I:
@@ -724,12 +727,9 @@ int read_i(int fd, char *buffer) {
             }
             case DATA_RCV_I:
             {
-                u_int8_t bcc2 = 0;
-                for (int i = n_bytes - data_bytes; i < n_bytes; i++) {
-                    bcc2 = bcc2^trama[i];
-                }
-                if (read_char[0] == bcc2) {
-                    receiving_data_state = BCC2_OK_I;
+                if (read_char[0] == FLAG) {
+                    receiving_data_state = FLAG2_RCV_I;
+                    received_second_flag = 1;
                     n_bytes++;
                 }
                 else if (read_char[0] == ESCAPE) {
@@ -742,19 +742,23 @@ int read_i(int fd, char *buffer) {
                 }
                 break;
             }
-            case BCC2_OK_I:
+            case FLAG2_RCV_I:
             {
-                if (read_char[0] == FLAG) {
-                    receiving_data_state = FINISH_I;
-                    n_bytes++;
+                u_int8_t bcc = 0x00;
+                for (int i = n_bytes-data_bytes-1; i < n_bytes-1; i++) {
+                    bcc = bcc^trama[i];
+                }
+                if (trama[n_bytes-2] == bcc) {
+                    receiving_data_state = FINISH;
                 }
                 else {
                     receiving_data_state = START_I;
                     n_bytes = 0;
+                    received_second_flag = 0;
                 }
                 break;
             }
-            case FINISH_I:
+            case FINISH:
             {
                 break_read_loop = 1;
                 break;
