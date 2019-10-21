@@ -758,7 +758,7 @@ int read_i(int fd, char *buffer) {
                 }
                 break;
             }
-            case FINISH:
+            case FINISH_I:
             {
                 break_read_loop = 1;
                 break;

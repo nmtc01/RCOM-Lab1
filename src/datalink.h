@@ -54,7 +54,7 @@ enum dataState {
     BCC1_OK_I,
     DATA_RCV_I,
     FLAG2_RCV_I,
-    FINISH,
+    FINISH_I,
     ESCAPE_RCV_I
 };
 
