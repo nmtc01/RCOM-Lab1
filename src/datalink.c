@@ -796,7 +796,7 @@ int write_rr(int fd) {
     else rr[2] = C_RR1;
     if (datalink.sequenceNumber)
         rr[3] = A_CMD^C_RR0;
-    else rr[3] = C_RR1;
+    else rr[3] = A_CMD^C_RR1;
     rr[4] = FLAG;
 
     int res = write(fd, rr, 5*sizeof(char));
