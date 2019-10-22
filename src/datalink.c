@@ -654,11 +654,12 @@ int write_i(int fd, char *buffer, int length) {
 
 int read_i(int fd, char *buffer) {
     unsigned char trama[STR_SIZE];
-    unsigned char data[4];
+    unsigned char data[5];
     int res;
     int n_bytes = 0;
     int data_bytes = 0;
     unsigned char read_char[1];
+    read_char[0] = '\0';
     
     receiving_data_state = START_I;
     break_read_loop = 0;
@@ -765,6 +766,7 @@ int read_i(int fd, char *buffer) {
                     bcc = bcc^trama[i];
                 }
                 if (trama[n_bytes-2] == bcc) {
+                    data_bytes--;
                     receiving_data_state = FINISH_I;
                 }
                 else {
