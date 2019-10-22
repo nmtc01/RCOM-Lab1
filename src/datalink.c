@@ -12,6 +12,7 @@
 struct linkLayer datalink;
 volatile sig_atomic_t received_ua = 0;
 volatile sig_atomic_t received_disc = 0;
+volatile sig_atomic_t received_i = 0;
 volatile sig_atomic_t n_timeouts = 0;
 volatile sig_atomic_t break_read_loop = 0;
 struct termios oldtio;
@@ -77,6 +78,10 @@ void timeout_handler(){
     else if (receiving_disc_state != FINISH) {
         received_disc = 0;
         receiving_disc_state = START;
+    }
+    else if (receiving_data_state != FINISH_I) {
+        received_i = 0;
+        receiving_data_state = START_I;
     }
 
     break_read_loop = 1;
@@ -561,10 +566,16 @@ int sendITramas(int fd, char *buffer, int length) {
     //Write trama I
     message("Writting Trama I");
     int res_i = write_i(fd, buffer, length);
+    alarm(datalink.timeout);
+
+    //Stop execution if could not stablish connection after MAX_TIMEOUTS
+        if (!received_i)
+            return -1;
 
     //Read trama RR
     message("Reading Trama RR");
     read_rr(fd);
+    alarm(0);
 
     return res_i;
 }
@@ -760,6 +771,7 @@ int read_i(int fd, char *buffer) {
             case FINISH_I:
             {
                 break_read_loop = 1;
+                received_i = 1;
                 break;
             }
             case ESCAPE_RCV_I:
