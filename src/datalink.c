@@ -745,11 +745,11 @@ int read_i(int fd, char *buffer) {
             case FLAG2_RCV_I:
             {
                 u_int8_t bcc = 0x00;
-                for (int i = n_bytes-data_bytes-1; i < n_bytes-1; i++) {
+                for (int i = n_bytes-data_bytes-1; i < n_bytes-2; i++) {
                     bcc = bcc^trama[i];
                 }
                 if (trama[n_bytes-2] == bcc) {
-                    receiving_data_state = FINISH;
+                    receiving_data_state = FINISH_I;
                 }
                 else {
                     receiving_data_state = START_I;
