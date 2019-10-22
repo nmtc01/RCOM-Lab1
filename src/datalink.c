@@ -147,7 +147,7 @@ int write_set(int fd) {
     set[4] = FLAG;
 
     int res = write(fd, set, 5*sizeof(char));
-    printf("%x%x%x%x%x - %d bytes written\n", set[0], set[1], set[2], set[3], set[4], res);
+    printf("%02x%02x%02x%02x%02x - %d bytes written\n", set[0], set[1], set[2], set[3], set[4], res);
 
     return res;
 }
@@ -249,7 +249,7 @@ void read_ua(int fd, int status) {
         }
     }
 
-    printf("%x%x%x%x%x - %d bytes read\n", ua[0], ua[1], ua[2], ua[3], ua[4], n_bytes);
+    printf("%02x%02x%02x%02x%02x - %d bytes read\n", ua[0], ua[1], ua[2], ua[3], ua[4], n_bytes);
 }
 
 void read_set(int fd) {
@@ -341,7 +341,7 @@ void read_set(int fd) {
         }
         }
     }
-    printf("%x%x%x%x%x - %d bytes read\n", set[0],set[1],set[2],set[3],set[4], n_bytes);
+    printf("%02x%02x%02x%02x%02x - %d bytes read\n", set[0],set[1],set[2],set[3],set[4], n_bytes);
     
 }
 
@@ -361,7 +361,7 @@ int write_ua(int fd, int status) {
 
     // WRITE
     int res = write(fd, ua, 5*sizeof(char));
-    printf("%x%x%x%x%x - %d bytes written\n", ua[0],ua[1],ua[2],ua[3],ua[4], res);
+    printf("%02x%02x%02x%02x%02x - %d bytes written\n", ua[0],ua[1],ua[2],ua[3],ua[4], res);
 
     return res;
 }
@@ -440,7 +440,7 @@ int write_disc(int fd, int status) {
     disc[4] = FLAG;
 
     int res = write(fd, disc, 5*sizeof(char));
-    printf("%x%x%x%x%x - %d bytes written\n", disc[0], disc[1], disc[2], disc[3], disc[4], res);
+    printf("%02x%02x%02x%02x%02x - %d bytes written\n", disc[0], disc[1], disc[2], disc[3], disc[4], res);
 
     return res;
 }
@@ -541,7 +541,7 @@ void read_disc(int fd, int status) {
             }
     }
 
-    printf("%x%x%x%x%x - %d bytes read\n", disc[0], disc[1], disc[2], disc[3], disc[4], n_bytes);
+    printf("%02x%02x%02x%02x%02x - %d bytes read\n", disc[0], disc[1], disc[2], disc[3], disc[4], n_bytes);
 }
 
 void cleanup(int fd){
@@ -628,9 +628,9 @@ int write_i(int fd, char *buffer, int length) {
     int res = write(fd, stuf, nr_bytes);
 
     for (int i = 0; i < nr_bytes-1; i++) {
-        printf("%x", stuf[i]);
+        printf("%02x", stuf[i]);
     }
-    printf("%x - %d data bytes written\n", stuf[nr_bytes-1], length);
+    printf("%02x - %d data bytes written\n", stuf[nr_bytes-1], length);
 
     return length;
 }
@@ -778,9 +778,9 @@ int read_i(int fd, char *buffer) {
     strcpy(buffer, data);
 
     for (int i = 0; i < n_bytes-1; i++) {
-        printf("%x", trama[i]);
+        printf("%02x", trama[i]);
     }
-    printf("%x - %d data bytes read\n", trama[n_bytes-1], data_bytes);
+    printf("%02x - %d data bytes read\n", trama[n_bytes-1], data_bytes);
 
     return data_bytes; 
 }
@@ -800,7 +800,7 @@ int write_rr(int fd) {
     rr[4] = FLAG;
 
     int res = write(fd, rr, 5*sizeof(char));
-    printf("%x%x%x%x%x - %d bytes written\n", rr[0], rr[1], rr[2], rr[3], rr[4], res);
+    printf("%02x%02x%02x%02x%02x - %d bytes written\n", rr[0], rr[1], rr[2], rr[3], rr[4], res);
 
     return res;
 }
@@ -850,6 +850,7 @@ void read_rr(int fd) {
                 if (datalink.sequenceNumber)
                     c_rr = C_RR0;
                 else c_rr = C_RR1;
+                
                 if (read_char[0] == c_rr) {
                     receiving_rr_state = C_RCV;
                     n_bytes++;
@@ -900,5 +901,5 @@ void read_rr(int fd) {
             }
     }
 
-    printf("%x%x%x%x%x - %d bytes read\n", rr[0], rr[1], rr[2], rr[3], rr[4], n_bytes);
+    printf("%02x%02x%02x%02x%02x - %d bytes read\n", rr[0], rr[1], rr[2], rr[3], rr[4], n_bytes);
 }
