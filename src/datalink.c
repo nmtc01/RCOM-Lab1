@@ -153,7 +153,7 @@ int write_set(int fd) {
 }
 
 void read_ua(int fd, int status) {
-    char ua[STR_SIZE];
+    unsigned char ua[STR_SIZE];
     int res;
     int n_bytes = 0;
     unsigned char read_char[1];
@@ -253,7 +253,7 @@ void read_ua(int fd, int status) {
 }
 
 void read_set(int fd) {
-    char set[STR_SIZE];
+    unsigned char set[STR_SIZE];
     unsigned char read_char[1];
     int n_bytes = 0;
     int res;
@@ -446,7 +446,7 @@ int write_disc(int fd, int status) {
 }
 
 void read_disc(int fd, int status) {
-    char disc[STR_SIZE];
+    unsigned char disc[STR_SIZE];
     int res;
     int n_bytes = 0;
     unsigned char read_char[1];
@@ -583,7 +583,7 @@ int receiveITramas(int fd, char *buffer) {
 
 int write_i(int fd, char *buffer, int length) {
     //Create trama
-    char trama[6+length];
+    unsigned char trama[6+length];
     u_int8_t bcc2 = 0x00;
     trama[0] = FLAG;
     trama[1] = A_CMD;
@@ -636,13 +636,12 @@ int write_i(int fd, char *buffer, int length) {
 }
 
 int read_i(int fd, char *buffer) {
-    char trama[STR_SIZE];
-    char data[4];
+    unsigned char trama[STR_SIZE];
+    unsigned char data[4];
     int res;
     int n_bytes = 0;
     int data_bytes = 0;
     unsigned char read_char[1];
-    read_char[0] = '\0';
     
     receiving_data_state = START_I;
     break_read_loop = 0;
@@ -806,12 +805,11 @@ int write_rr(int fd) {
 }
 
 void read_rr(int fd) {
-    char rr[STR_SIZE];
+    unsigned char rr[STR_SIZE];
     u_int8_t c_rr;
     int res;
     int n_bytes = 0;
     unsigned char read_char[1];
-    read_char[0] = '\0';
     
     receiving_rr_state = START;
     break_read_loop = 0;
@@ -898,7 +896,7 @@ void read_rr(int fd) {
                 break_read_loop = 1;
                 break;
             }
-            }
+        }
     }
 
     printf("%02x%02x%02x%02x%02x - %d bytes read\n", rr[0], rr[1], rr[2], rr[3], rr[4], n_bytes);
