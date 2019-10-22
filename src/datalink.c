@@ -156,7 +156,7 @@ void read_ua(int fd, int status) {
     char ua[STR_SIZE];
     int res;
     int n_bytes = 0;
-    char read_char[1];
+    unsigned char read_char[1];
     read_char[0] = '\0';
 
     receiving_ua_state = START;
@@ -254,7 +254,7 @@ void read_ua(int fd, int status) {
 
 void read_set(int fd) {
     char set[STR_SIZE];
-    char read_char[2];
+    unsigned char read_char[1];
     int n_bytes = 0;
     int res;
     int received_set = 0;
@@ -449,7 +449,7 @@ void read_disc(int fd, int status) {
     char disc[STR_SIZE];
     int res;
     int n_bytes = 0;
-    char read_char[1];
+    unsigned char read_char[1];
     read_char[0] = '\0';
     u_int8_t A;
     if (status == TRANSMITTER)
@@ -641,7 +641,7 @@ int read_i(int fd, char *buffer) {
     int res;
     int n_bytes = 0;
     int data_bytes = 0;
-    char read_char[1];
+    unsigned char read_char[1];
     read_char[0] = '\0';
     
     receiving_data_state = START_I;
@@ -796,7 +796,7 @@ int write_rr(int fd) {
     else rr[2] = C_RR1;
     if (datalink.sequenceNumber)
         rr[3] = A_CMD^C_RR0;
-    else rr[3] = C_RR1;
+    else rr[3] = A_CMD^C_RR1;
     rr[4] = FLAG;
 
     int res = write(fd, rr, 5*sizeof(char));
@@ -810,7 +810,7 @@ void read_rr(int fd) {
     u_int8_t c_rr;
     int res;
     int n_bytes = 0;
-    char read_char[1];
+    unsigned char read_char[1];
     read_char[0] = '\0';
     
     receiving_rr_state = START;
@@ -850,7 +850,7 @@ void read_rr(int fd) {
                 if (datalink.sequenceNumber)
                     c_rr = C_RR0;
                 else c_rr = C_RR1;
-                
+
                 if (read_char[0] == c_rr) {
                     receiving_rr_state = C_RCV;
                     n_bytes++;
