@@ -560,22 +560,28 @@ void cleanup(int fd){
 }
 
 int sendITramas(int fd, char *buffer, int length) {
+    int res_i;
     //Initial sequenceNumber
     datalink.sequenceNumber = 0;
 
-    //Write trama I
-    message("Writting Trama I");
-    int res_i = write_i(fd, buffer, length);
-    alarm(datalink.timeout);
+    while(n_timeouts < datalink.numTransmissions){
+        if (!received_i) {
+            //Write trama I
+            message("Writting Trama I");
+            res_i = write_i(fd, buffer, length);
+            alarm(datalink.timeout);
 
-    //Stop execution if could not stablish connection after MAX_TIMEOUTS
-        if (!received_i)
-            return -1;
+            //Read trama RR
+            message("Reading Trama RR");
+            read_rr(fd);
+            alarm(0);
+        }
+        else break;
+    }
 
-    //Read trama RR
-    message("Reading Trama RR");
-    read_rr(fd);
-    alarm(0);
+    //Stop execution if could not send trama I after MAX_TIMEOUTS
+    if (!received_i)
+        return -1;
 
     return res_i;
 }
@@ -906,6 +912,7 @@ void read_rr(int fd) {
             case FINISH:
             {
                 break_read_loop = 1;
+                received_i = 1;
                 break;
             }
         }
