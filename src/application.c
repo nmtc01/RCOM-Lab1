@@ -44,14 +44,24 @@ int main(int argc, char **argv) {
             return -1;
         }
 
-        char msg_to_send[4] = "ola";
-        message("Started llwrite");
-        int n_chars_written = llwrite(application.fd_port, msg_to_send, 4*sizeof(char));
-        if (n_chars_written < 0) {
-            perror("llwrite");
-            return -1;
-        }
+        //Fragments of file
+        char frag[FRAG_SIZE];
+        int nr_frags = strlen(file)/FRAG_SIZE;
+        if (strlen(file) % FRAG_SIZE)
+            nr_frags++;
 
+        //Write information
+        message("Started llwrite");
+        for (int j = 0; j < nr_frags; j++) {
+            //TODO need to change readFile in order to read only FRAG_SIZE bytes
+            //at each time, and pass them directly to llwrite
+
+            int n_chars_written = llwrite(application.fd_port, frag, FRAG_SIZE);
+            if (n_chars_written < 0) {
+                perror("llwrite");
+                return -1;
+            }
+        }
     }
     else {
         //Receive information

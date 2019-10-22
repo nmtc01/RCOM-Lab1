@@ -561,6 +561,7 @@ void cleanup(int fd){
 
 int sendITramas(int fd, char *buffer, int length) {
     int res_i;
+
     //Initial sequenceNumber
     datalink.sequenceNumber = 0;
 
@@ -654,7 +655,7 @@ int write_i(int fd, char *buffer, int length) {
 
 int read_i(int fd, char *buffer) {
     unsigned char trama[STR_SIZE];
-    unsigned char data[5];
+    unsigned char data[FRAG_SIZE];
     int res;
     int n_bytes = 0;
     int data_bytes = 0;
