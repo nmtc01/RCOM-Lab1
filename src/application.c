@@ -34,6 +34,9 @@ int main(int argc, char **argv) {
     }
     
     //Main Communication
+    //Nr of file fragments to send
+    int nr_frags = 0;
+
     if (application.status == TRANSMITTER) {
         //Transmitter
         //Open file
@@ -43,19 +46,19 @@ int main(int argc, char **argv) {
             return -1;
         }
 
-        //Fragments of file
-        unsigned char frag[FRAG_SIZE];
+        //Fragments of file to send
+        unsigned char send_frag[FRAG_SIZE];
         int numbytes;
 
         //Write information
         message("Started llwrite");
         //Read fragments and send them one by one
-        while ((numbytes = read(fd_file, frag, FRAG_SIZE)) != 0) {
+        while ((numbytes = read(fd_file, send_frag, FRAG_SIZE)) != 0) {
             if (numbytes < 0) {
                 perror("readFile");
                 return -1;
             }
-            int n_chars_written = llwrite(application.fd_port, frag, FRAG_SIZE);
+            int n_chars_written = llwrite(application.fd_port, send_frag, FRAG_SIZE);
             if (n_chars_written < 0) {
                 perror("llwrite");
                 return -1;
@@ -65,11 +68,17 @@ int main(int argc, char **argv) {
     else {
         //Receive information
         message("Started llread");
-        char msg_to_receive[4];
-        int n_chars_read = llread(application.fd_port, msg_to_receive);
-        if (n_chars_read < 0) {
-            perror("llread");
-            return -1;
+
+        //Fragments of file to read
+        unsigned char receive_frag[FRAG_SIZE];
+
+        //Read fragments
+        for (int i = 0; i < 1; i++) {
+            int n_chars_read = llread(application.fd_port, receive_frag);
+            if (n_chars_read < 0) {
+                perror("llread");
+                return -1;
+            }
         }
     }
 

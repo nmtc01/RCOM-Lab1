@@ -665,10 +665,10 @@ int read_i(int fd, char *buffer) {
     receiving_data_state = START_I;
     break_read_loop = 0;
     int received_second_flag = 0;
-
+    
     while (!break_read_loop) {
         if (!received_second_flag) {
-            res = read(fd, read_char, sizeof(char));	
+            res = read(fd, read_char, sizeof(char));
             trama[n_bytes] = read_char[0];
         }
         
@@ -754,6 +754,7 @@ int read_i(int fd, char *buffer) {
                     receiving_data_state = ESCAPE_RCV_I;
                 }
                 else {
+                    printf("read_char[0] = %02x\n", read_char[0]);
                     data[data_bytes] = trama[n_bytes];
                     n_bytes++;
                     data_bytes++;
@@ -766,14 +767,14 @@ int read_i(int fd, char *buffer) {
                 for (int i = n_bytes-data_bytes-1; i < n_bytes-2; i++) {
                     bcc = bcc^trama[i];
                 }
+
                 if (trama[n_bytes-2] == bcc) {
                     data_bytes--;
                     receiving_data_state = FINISH_I;
                 }
                 else {
-                    receiving_data_state = START_I;
-                    n_bytes = 0;
-                    received_second_flag = 0;
+                    receiving_data_state = FINISH_I;
+                    data_bytes = 0;
                 }
                 break;
             }
@@ -793,12 +794,13 @@ int read_i(int fd, char *buffer) {
                 break;
             }
         }
+        printf("data bytes = %d e n_bytes = %d\n", data_bytes, n_bytes);
     }
-
+    
     strcpy(buffer, data);
 
     for (int i = 0; i < n_bytes-1; i++) {
-        printf("%02x", trama[i]);
+        printf("%02x.", trama[i]);
     }
     printf("%02x - %d data bytes read\n", trama[n_bytes-1], data_bytes);
 
