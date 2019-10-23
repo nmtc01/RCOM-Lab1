@@ -36,7 +36,7 @@ int main(int argc, char **argv) {
     //Main Communication
     if (application.status == TRANSMITTER) {
         //Transmitter
-        //Read file to send
+        /*//Read file to send
         char *file;
         int numbytes = readFile(file);
         if (numbytes < 0) {
@@ -48,14 +48,27 @@ int main(int argc, char **argv) {
         char frag[FRAG_SIZE];
         int nr_frags = strlen(file)/FRAG_SIZE;
         if (strlen(file) % FRAG_SIZE)
-            nr_frags++;
+            nr_frags++;*/
+
+        //Open file
+        int fd_file = open(FILE_TO_SEND, O_RDONLY | O_NONBLOCK);
+        if (fd_file < 0) {
+            perror("Opening File");
+            return -1;
+        }
+
+        //Fragments of file
+        char frag[FRAG_SIZE];
+        int numbytes;
 
         //Write information
         message("Started llwrite");
-        for (int j = 0; j < nr_frags; j++) {
-            //TODO need to change readFile in order to read only FRAG_SIZE bytes
-            //at each time, and pass them directly to llwrite
-
+        //Read fragments and send them one by one
+        while ((numbytes = read(fd_file, frag, FRAG_SIZE)) != 0) {
+            if (numbytes < 0) {
+                perror("readFile");
+                return -1;
+            }
             int n_chars_written = llwrite(application.fd_port, frag, FRAG_SIZE);
             if (n_chars_written < 0) {
                 perror("llwrite");
@@ -110,7 +123,7 @@ int llopen(int port, int status) {
     return fd;
 }
 
-int readFile(char *msg) {
+/*int readFile(char *file) {
     FILE *file;
     int numbytes;
 
@@ -140,9 +153,9 @@ int readFile(char *msg) {
     //close file
     if (fclose(file))
         return -1;
-
+    
     return numbytes;
-}
+}*/
 
 int llwrite(int fd, char *buffer, int length) {
     int nr_chars = sendITramas(fd, buffer, length);
@@ -169,18 +182,3 @@ int llclose(int fd, int status) {
 
     return 1;
 }
-
-/*
-    TODO -> Finish sendITramas and receiveITramas:
-    fazer primeira experiência de mandar apenas "ola" dentro dos dados da trama I
-    depois:
-    timeout nas tramas I
-    RR e ACK
-    colocar a ler o ficheiro 
-    colocar em loop o sendITramas
-    colocar a mandar as tramas como é suposto
-    colocar a ler as tramas com máquina de estados
-    fazer o caso em que é recebido o octeto de escape
-    fazer o destuffing
-    colocar a construir o ficheiro
-*/

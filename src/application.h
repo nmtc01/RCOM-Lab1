@@ -23,7 +23,7 @@ void setup(int argc, char **argv);
 int llopen(int port, int status);
 
 //Write
-int readFile(char *msg);
+//int readFile(char *file);
 int llwrite(int fd, char *buffer, int length);
 
 //Read
