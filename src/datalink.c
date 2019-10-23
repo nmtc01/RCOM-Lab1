@@ -671,6 +671,8 @@ int read_i(int fd, char *buffer) {
             res = read(fd, read_char, sizeof(char));
             if (res < 0)
                 continue;
+            if (res == 0)
+                return res;
             trama[n_bytes] = read_char[0];
         }
         
