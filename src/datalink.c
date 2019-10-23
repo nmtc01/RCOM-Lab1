@@ -655,7 +655,7 @@ int write_i(int fd, char *buffer, int length) {
 
 int read_i(int fd, char *buffer) {
     unsigned char trama[STR_SIZE];
-    unsigned char data[FRAG_SIZE];
+    unsigned char data[FRAG_SIZE+1];
     int res;
     int n_bytes = 0;
     int data_bytes = 0;
