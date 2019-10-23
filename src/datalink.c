@@ -756,7 +756,6 @@ int read_i(int fd, char *buffer) {
                     receiving_data_state = ESCAPE_RCV_I;
                 }
                 else {
-                    printf("read_char[0] = %02x\n", read_char[0]);
                     data[data_bytes] = trama[n_bytes];
                     n_bytes++;
                     data_bytes++;
@@ -796,7 +795,6 @@ int read_i(int fd, char *buffer) {
                 break;
             }
         }
-        printf("data bytes = %d e n_bytes = %d\n", data_bytes, n_bytes);
     }
     
     strcpy(buffer, data);

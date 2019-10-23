@@ -34,9 +34,6 @@ int main(int argc, char **argv) {
     }
     
     //Main Communication
-    //Nr of file fragments to send
-    int nr_frags = 0;
-
     if (application.status == TRANSMITTER) {
         //Transmitter
         //Open file
@@ -71,10 +68,10 @@ int main(int argc, char **argv) {
 
         //Fragments of file to read
         unsigned char receive_frag[FRAG_SIZE];
+        int n_chars_read;
 
         //Read fragments
-        for (int i = 0; i < 1; i++) {
-            int n_chars_read = llread(application.fd_port, receive_frag);
+        while((n_chars_read = llread(application.fd_port, receive_frag)) != 0) {
             if (n_chars_read < 0) {
                 perror("llread");
                 return -1;
