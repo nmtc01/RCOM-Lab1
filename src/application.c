@@ -36,20 +36,6 @@ int main(int argc, char **argv) {
     //Main Communication
     if (application.status == TRANSMITTER) {
         //Transmitter
-        /*//Read file to send
-        char *file;
-        int numbytes = readFile(file);
-        if (numbytes < 0) {
-            perror("readFile");
-            return -1;
-        }
-
-        //Fragments of file
-        char frag[FRAG_SIZE];
-        int nr_frags = strlen(file)/FRAG_SIZE;
-        if (strlen(file) % FRAG_SIZE)
-            nr_frags++;*/
-
         //Open file
         int fd_file = open(FILE_TO_SEND, O_RDONLY | O_NONBLOCK);
         if (fd_file < 0) {
@@ -58,7 +44,7 @@ int main(int argc, char **argv) {
         }
 
         //Fragments of file
-        char frag[FRAG_SIZE];
+        unsigned char frag[FRAG_SIZE];
         int numbytes;
 
         //Write information
@@ -122,40 +108,6 @@ int llopen(int port, int status) {
 
     return fd;
 }
-
-/*int readFile(char *file) {
-    FILE *file;
-    int numbytes;
-
-    //open an existing file for reading
-    file = fopen(FILE_TO_SEND, "r");
-    
-    //quit if the file does not exist
-    if (file == NULL) 
-        return -1;
-    
-    //get the number of bytes
-    if (fseek(file, 0L, SEEK_END))
-        return -1;
-    numbytes = ftell(file);
-
-    //reset the file position indicator
-    fseek(file, 0L, SEEK_SET);
-
-    //allocate memory
-    msg = (char*)calloc(numbytes, sizeof(char));
-    if (msg == NULL)
-        return -1;
-
-    //copy all the text into msg
-    fread(msg, sizeof(char), numbytes, file);
-    
-    //close file
-    if (fclose(file))
-        return -1;
-    
-    return numbytes;
-}*/
 
 int llwrite(int fd, char *buffer, int length) {
     int nr_chars = sendITramas(fd, buffer, length);

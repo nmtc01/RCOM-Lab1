@@ -621,7 +621,7 @@ int write_i(int fd, char *buffer, int length) {
     int new_bytes = 0;
     int nr_bytes = 6+length;
 
-    char *stuf = malloc(nr_bytes);
+    unsigned char *stuf = malloc(nr_bytes);
     
     stuf[0] = trama[0];
     for (int j = 1; j < sizeof(trama)-1; j++) {
