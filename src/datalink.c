@@ -561,6 +561,8 @@ void cleanup(int fd){
 
 int sendITramas(int fd, char *buffer, int length) {
     int res_i;
+    //Reset flag
+    received_i = 0;
 
     //Initial sequenceNumber
     datalink.sequenceNumber = 0;
@@ -600,6 +602,7 @@ int receiveITramas(int fd, char *buffer) {
 }
 
 int write_i(int fd, char *buffer, int length) {
+    
     //Create trama
     unsigned char trama[6+length];
     u_int8_t bcc2 = 0x00;
@@ -646,7 +649,7 @@ int write_i(int fd, char *buffer, int length) {
     int res = write(fd, stuf, nr_bytes);
 
     for (int i = 0; i < nr_bytes-1; i++) {
-        printf("%02x", stuf[i]);
+        printf("%02x.", stuf[i]);
     }
     printf("%02x - %d data bytes written\n", stuf[nr_bytes-1], length);
 
