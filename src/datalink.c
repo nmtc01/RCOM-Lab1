@@ -774,7 +774,7 @@ int read_i(int fd, char *buffer) {
                 for (int i = n_bytes-data_bytes-1; i < n_bytes-2; i++) {
                     bcc = bcc^trama[i];
                 }
-
+printf("bcc = %02x e trama[n_bytes-2] = %02x\n", bcc, trama[n_bytes-2]);
                 if (trama[n_bytes-2] == bcc) {
                     data_bytes--;
                     receiving_data_state = FINISH_I;
