@@ -9,7 +9,7 @@
 #include "application.h"
 
 int main(int argc, char **argv) {
-    
+
     //Validate arguments
     setup(argc, argv);
 
@@ -32,7 +32,7 @@ int main(int argc, char **argv) {
         perror("llopen");
         return -1;
     }
-    
+
     //Main Communication
     if (application.status == TRANSMITTER) {
         //Transmitter
@@ -86,7 +86,7 @@ int main(int argc, char **argv) {
         return -1;
     }
 
-    return 0;       
+    return 0;
 }
 
 void setup(int argc, char **argv){
@@ -121,7 +121,7 @@ int llwrite(int fd, char *buffer, int length) {
         return -1;
 
     return nr_chars;
-} 
+}
 
 int llread(int fd, char *buffer) {
     int nr_chars = receiveITramas(fd, buffer);

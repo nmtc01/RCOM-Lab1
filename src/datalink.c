@@ -119,7 +119,7 @@ int sendStablishTramas(int fd, int status){
         //Stop execution if could not stablish connection after MAX_TIMEOUTS
         if (!received_ua)
             return -1;
-        
+
     }
     else {
         //Receiver
@@ -138,7 +138,7 @@ int sendStablishTramas(int fd, int status){
         n_timeouts = 0;
         received_ua = 0;
         break_read_loop = 0;
-    
+
     return 0;
 }
 
@@ -173,9 +173,9 @@ void read_ua(int fd, int status) {
     else A = A_ANS;
 
     while (!break_read_loop) {
-        res = read(fd, read_char, sizeof(char));	
+        res = read(fd, read_char, sizeof(char));
         ua[n_bytes] = read_char[0];
-        
+
         switch (receiving_ua_state) {
             case START:
             {
@@ -207,7 +207,7 @@ void read_ua(int fd, int status) {
                     receiving_ua_state = C_RCV;
                     n_bytes++;
                 }
-                else if (read_char[0] == FLAG) { 
+                else if (read_char[0] == FLAG) {
                     receiving_ua_state = FLAG_RCV;
                     n_bytes = 1;
                 }
@@ -267,9 +267,9 @@ void read_set(int fd) {
 
     // READ
     while (!received_set) {
-        res = read(fd, read_char, sizeof(char));               
-        set[n_bytes] = read_char[0];     
-        
+        res = read(fd, read_char, sizeof(char));
+        set[n_bytes] = read_char[0];
+
         switch (receiving_set_state) {
         case START:
         {
@@ -347,11 +347,11 @@ void read_set(int fd) {
         }
     }
     printf("%02x%02x%02x%02x%02x - %d bytes read\n", set[0],set[1],set[2],set[3],set[4], n_bytes);
-    
+
 }
 
 int write_ua(int fd, int status) {
-    
+
     //Create trama UA
     unsigned char ua[5];
     ua[0] = FLAG;
@@ -408,17 +408,17 @@ int sendDiscTramas(int fd, int status) {
 
         //Read disc
         message("Reading disc");
-        read_disc(fd, status); 
-        
+        read_disc(fd, status);
+
         while(n_timeouts < datalink.numTransmissions) {
             if (!received_ua) {
                 //Write disc
                 message("Writting disc");
-                int res_disc = write_disc(fd, status); 
+                int res_disc = write_disc(fd, status);
                 if (res_disc < 0)
                     return -1;
                 alarm(datalink.timeout);
-                
+
                 //Read ua
                 message("Reading ua");
                 read_ua(fd, status);
@@ -460,14 +460,14 @@ void read_disc(int fd, int status) {
     if (status == TRANSMITTER)
         A = A_ANS;
     else A = A_CMD;
-    
+
     receiving_disc_state = START;
     break_read_loop = 0;
 
     while (!break_read_loop) {
-        res = read(fd, read_char, sizeof(char));	
+        res = read(fd, read_char, sizeof(char));
         disc[n_bytes] = read_char[0];
-        
+
         switch (receiving_disc_state) {
             case START:
             {
@@ -499,7 +499,7 @@ void read_disc(int fd, int status) {
                     receiving_disc_state = C_RCV;
                     n_bytes++;
                 }
-                else if (read_char[0] == FLAG) { 
+                else if (read_char[0] == FLAG) {
                     receiving_disc_state = FLAG_RCV;
                     n_bytes = 1;
                 }
@@ -602,7 +602,7 @@ int receiveITramas(int fd, char *buffer) {
 }
 
 int write_i(int fd, char *buffer, int length) {
-    
+
     //Create trama
     unsigned char trama[6+length];
     u_int8_t bcc2 = 0x00;
@@ -612,7 +612,7 @@ int write_i(int fd, char *buffer, int length) {
         trama[2] = C_1;
     else trama[2] = C_0;
     trama[3] = A_CMD^trama[2];
-    
+
     for (int i = 0; i < length; i++) {
         trama[4+i] = buffer[i];
         bcc2 = bcc2 ^ buffer[i];
@@ -625,7 +625,7 @@ int write_i(int fd, char *buffer, int length) {
     int nr_bytes = 6+length;
 
     unsigned char *stuf = malloc(nr_bytes);
-    
+
     stuf[0] = trama[0];
     for (int j = 1; j < sizeof(trama)-1; j++) {
         if (trama[j] == FLAG) {
@@ -648,10 +648,11 @@ int write_i(int fd, char *buffer, int length) {
     //Write trama I
     int res = write(fd, stuf, nr_bytes);
 
-    for (int i = 0; i < nr_bytes-1; i++) {
-        printf("%02x.", stuf[i]);
+    /*for (int i = 0; i < nr_bytes-1; i++) {
+        printf("%02x", stuf[i]);
     }
     printf("%02x - %d data bytes written\n", stuf[nr_bytes-1], length);
+*/
 
     return length;
 }
@@ -664,11 +665,11 @@ int read_i(int fd, char *buffer) {
     int data_bytes = 0;
     unsigned char read_char[1];
     read_char[0] = '\0';
-    
+
     receiving_data_state = START_I;
     break_read_loop = 0;
     int received_second_flag = 0;
-    
+
     while (!break_read_loop) {
         if (!received_second_flag) {
             res = read(fd, read_char, sizeof(char));
@@ -678,7 +679,7 @@ int read_i(int fd, char *buffer) {
                 return res;
             trama[n_bytes] = read_char[0];
         }
-        
+
         switch (receiving_data_state) {
             case START_I:
             {
@@ -801,15 +802,15 @@ int read_i(int fd, char *buffer) {
             }
         }
     }
-    
+
     strcpy(buffer, data);
 
-    for (int i = 0; i < n_bytes-1; i++) {
-        printf("%02x.", trama[i]);
+    /*for (int i = 0; i < n_bytes-1; i++) {
+        printf("%02x", trama[i]);
     }
     printf("%02x - %d data bytes read\n", trama[n_bytes-1], data_bytes);
-
-    return data_bytes; 
+*/
+    return data_bytes;
 }
 
 int write_rr(int fd) {
@@ -834,18 +835,19 @@ int write_rr(int fd) {
 
 void read_rr(int fd) {
     unsigned char rr[STR_SIZE];
+    memset(rr, '\0', STR_SIZE);
     u_int8_t c_rr;
     int res;
     int n_bytes = 0;
     unsigned char read_char[1];
-    
+
     receiving_rr_state = START;
     break_read_loop = 0;
 
     while (!break_read_loop) {
-        res = read(fd, read_char, sizeof(char));	
+        res = read(fd, read_char, sizeof(char));
         rr[n_bytes] = read_char[0];
-        
+
         switch (receiving_rr_state) {
             case START:
             {
@@ -881,7 +883,7 @@ void read_rr(int fd) {
                     receiving_rr_state = C_RCV;
                     n_bytes++;
                 }
-                else if (read_char[0] == FLAG) { 
+                else if (read_char[0] == FLAG) {
                     receiving_rr_state = FLAG_RCV;
                     n_bytes = 1;
                 }
