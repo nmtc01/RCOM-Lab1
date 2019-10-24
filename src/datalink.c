@@ -648,11 +648,11 @@ int write_i(int fd, char *buffer, int length) {
     //Write trama I
     int res = write(fd, stuf, nr_bytes);
 
-    /*for (int i = 0; i < nr_bytes-1; i++) {
+    for (int i = 0; i < nr_bytes-1; i++) {
         printf("%02x", stuf[i]);
     }
     printf("%02x - %d data bytes written\n", stuf[nr_bytes-1], length);
-*/
+
 
     return length;
 }
@@ -781,7 +781,7 @@ int read_i(int fd, char *buffer) {
                 }
                 else {
                     receiving_data_state = FINISH_I;
-                    data_bytes = 0;
+                    data_bytes = 0;//error is here, bcc a dar mal (contudo ele está bem por isso estranho)
                 }
                 break;
             }
@@ -805,11 +805,11 @@ int read_i(int fd, char *buffer) {
 
     strcpy(buffer, data);
 
-    /*for (int i = 0; i < n_bytes-1; i++) {
+    for (int i = 0; i < n_bytes-1; i++) {
         printf("%02x", trama[i]);
     }
     printf("%02x - %d data bytes read\n", trama[n_bytes-1], data_bytes);
-*/
+
     return data_bytes;
 }
 
@@ -843,7 +843,7 @@ void read_rr(int fd) {
 
     receiving_rr_state = START;
     break_read_loop = 0;
-
+    
     while (!break_read_loop) {
         res = read(fd, read_char, sizeof(char));
         rr[n_bytes] = read_char[0];

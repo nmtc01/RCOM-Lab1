@@ -43,6 +43,8 @@ int main(int argc, char **argv) {
             return -1;
         }
 
+        //File size TODO - está na struct fstat -> ir buscar
+
         //Fragments of file to send
         unsigned char send_frag[FRAG_SIZE];
         int numbytes;
