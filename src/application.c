@@ -106,13 +106,13 @@ int llopen(int port, int status) {
     int fd = open_port(port);
     //Check errors
     if (fd < 0)
-        return -1;
+        return fd;
 
     //Tramas set and ua
     int res = sendStablishTramas(fd, status);
     //Check errors
     if (res < 0)
-        return -1;
+        return res;
 
     return fd;
 }
@@ -127,8 +127,6 @@ int llwrite(int fd, char *buffer, int length) {
 
 int llread(int fd, char *buffer) {
     int nr_chars = receiveITramas(fd, buffer);
-    if (nr_chars < 0)
-        return -1;
 
     return nr_chars;
 }
@@ -136,7 +134,7 @@ int llread(int fd, char *buffer) {
 int llclose(int fd, int status) {
     int res = sendDiscTramas(fd, status);
     if (res < 0)
-        return -1;
+        return res;
 
     cleanup(fd);
 

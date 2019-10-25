@@ -37,7 +37,7 @@ int open_port(int port){
     fd = open(datalink.port, O_RDWR | O_NOCTTY | O_NONBLOCK);
 
     if (fd < 0)
-        return -1;
+        return fd;
 
 	message("Opened serial port.");
 
@@ -105,7 +105,7 @@ int sendStablishTramas(int fd, int status){
                 message("Writting set");
                 int res_set = write_set(fd);
                 if (res_set < 0)
-                    return -1;
+                    return res_set;
                 alarm(datalink.timeout);
 
                 //Read ua
@@ -381,7 +381,7 @@ int sendDiscTramas(int fd, int status) {
                 message("Writting disc");
                 int res_disc = write_disc(fd, status);
                 if (res_disc < 0)
-                    return -1;
+                    return res_disc;
                 alarm(datalink.timeout);
 
                 //Read disc
@@ -400,7 +400,7 @@ int sendDiscTramas(int fd, int status) {
         message("Writting ua");
         int res_ua = write_ua(fd, status);
         if (res_ua < 0)
-            return -1;
+            return res_ua;
 
     }
     else {
@@ -416,7 +416,7 @@ int sendDiscTramas(int fd, int status) {
                 message("Writting disc");
                 int res_disc = write_disc(fd, status);
                 if (res_disc < 0)
-                    return -1;
+                    return res_disc;
                 alarm(datalink.timeout);
 
                 //Read ua
@@ -627,7 +627,10 @@ int write_i(int fd, char *buffer, int length) {
     unsigned char *stuf = malloc(nr_bytes);
 
     stuf[0] = trama[0];
-    for (int j = 1; j < sizeof(trama)-1; j++) {
+    stuf[1] = trama[1];
+    stuf[2] = trama[2];
+    stuf[3] = trama[3]
+    for (int j = 4; j < 5+length; j++) {
         if (trama[j] == FLAG) {
             nr_bytes++;
             new_bytes++;
@@ -639,6 +642,7 @@ int write_i(int fd, char *buffer, int length) {
             nr_bytes++;
             new_bytes++;
             stuf = (char *)realloc(stuf, nr_bytes);
+            stuf[j+new_bytes-1] = ESCAPE;
             stuf[j+new_bytes] = ESCAPE^STUF;
         }
         else stuf[j+new_bytes] = trama[j];
@@ -774,7 +778,6 @@ int read_i(int fd, char *buffer) {
                 for (int i = n_bytes-data_bytes-1; i < n_bytes-2; i++) {
                     bcc = bcc^trama[i];
                 }
-printf("bcc = %02x e trama[n_bytes-2] = %02x\n", bcc, trama[n_bytes-2]);
                 if (trama[n_bytes-2] == bcc) {
                     data_bytes--;
                     receiving_data_state = FINISH_I;
@@ -805,10 +808,10 @@ printf("bcc = %02x e trama[n_bytes-2] = %02x\n", bcc, trama[n_bytes-2]);
 
     strcpy(buffer, data);
 
-    for (int i = 0; i < n_bytes-1; i++) {
+    /*for (int i = 0; i < n_bytes-1; i++) {
         printf("%02x", trama[i]);
     }
-    printf("%02x - %d data bytes read\n", trama[n_bytes-1], data_bytes);
+    printf("%02x - %d data bytes read\n", trama[n_bytes-1], data_bytes);*/
 
     return data_bytes;
 }
