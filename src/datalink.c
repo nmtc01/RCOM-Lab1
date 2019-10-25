@@ -578,6 +578,9 @@ int sendITramas(int fd, char *buffer, int length) {
             message("Reading Trama RR");
             read_rr(fd);
             alarm(0);
+
+            //Change sequence number
+            datalink.sequenceNumber = (datalink.sequenceNumber+1) % 2;
         }
         else break;
     }
@@ -711,7 +714,7 @@ int read_i(int fd, char *buffer) {
             }
             case A_RCV_I:
             {
-                if (read_char[0] == C_0 || read_char[0] == C_1) {
+                if ((read_char[0] == C_0 && datalink.sequenceNumber) || (read_char[0] == C_1 && (!datalink.sequenceNumber))) {
                     receiving_data_state = C_RCV_I;
                     n_bytes++;
                 }
