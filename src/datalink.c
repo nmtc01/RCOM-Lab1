@@ -572,7 +572,6 @@ int sendITramas(int fd, char *buffer, int length) {
     while(n_timeouts < datalink.numTransmissions){
         if (!received_i) {
             //Write trama I
-            printf("%d\n", datalink.sequenceNumber);
             message("Writting Trama I");
             res_i = write_i(fd, buffer, length);
             alarm(datalink.timeout);
