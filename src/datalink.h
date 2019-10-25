@@ -15,6 +15,7 @@
 #include <termios.h>
 #include <string.h>
 #include <stdlib.h>
+#include <libgen.h>
 
 #define BAUDRATE        B38400
 #define STR_SIZE        255
