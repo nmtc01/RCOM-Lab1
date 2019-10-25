@@ -606,6 +606,11 @@ int receiveITramas(int fd, char *buffer) {
     message("Writting Trama RR");
     int res_rr = write_rr(fd);
 
+    //Change sequence number
+    if (!timed_out)
+        datalink.sequenceNumber = (datalink.sequenceNumber+1) % 2;
+    timed_out = 0;
+
     return data_bytes;
 }
 
