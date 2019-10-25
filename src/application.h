@@ -46,7 +46,7 @@ void setup(int argc, char **argv);
 int llopen(int port, int status);
 
 //Write
-int llwrite(int fd, data_packet packet, int length);
+int llwrite(int fd, void* packet, int length);
 
 //Read
 int llread(int fd, char *buffer);

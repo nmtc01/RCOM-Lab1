@@ -84,6 +84,9 @@ int main(int argc, char **argv) {
 
     // Write information
     message("Started llwrite");
+
+    // TODO: send start packet
+
     // Read fragments and send them one by one
     while ((numbytes = read(fd_file, send_frag, FRAG_SIZE)) != 0) {
       if (numbytes < 0) {
@@ -94,12 +97,16 @@ int main(int argc, char **argv) {
       data_packet.sequence_number = (data_packet.sequence_number + 1) % 256;
       data_packet.data = send_frag;
 
-      int n_chars_written = llwrite(application.fd_port, data_packet, FRAG_SIZE);
+      int n_chars_written = llwrite(application.fd_port, (void*)data_packet, FRAG_SIZE);
       if (n_chars_written < 0) {
         perror("llwrite");
         return -1;
       }
     }
+
+    // TODO: send end packet
+
+
   } else {
     // Receive information
     message("Started llread");
@@ -155,28 +162,41 @@ int llopen(int port, int status) {
   return fd;
 }
 
-int llwrite(int fd, data_packet packet, int length) {
+int llwrite(int fd, void* packet_void_ptr, int length) {
   char* buffer;
+  data_packet* data_packet_ptr = (data_packet*)packet_void_ptr;
+  ctrl_packet* ctrl_packet_ptr = (ctrl_packet*)packet_void_ptr;
 
-  switch (packet.control) {
+  switch (data_packet_ptr->control) {
   case 1:
-    buffer = malloc(sizeof(char) * (4 + packet.nr_bytes2 * 256 + packet.nr_bytes1));
-    buffer[0] = packet.control;
-    buffer[1] = packet.sequence_number;
-    buffer[2] = packet.nr_bytes2;
-    buffer[3] = packet.nr_bytes1;
-    strcpy((buffer + 4), packet.data);
+    buffer = malloc(sizeof(char) * (4 + data_packet_ptr->nr_bytes2 * 256 + data_packet_ptr->nr_bytes1));
+    buffer[0] = data_packet_ptr->control;
+    buffer[1] = data_packet_ptr->sequence_number;
+    buffer[2] = data_packet_ptr->nr_bytes2;
+    buffer[3] = data_packet_ptr->nr_bytes1;
+    strcpy((buffer + 4), data_packet_ptr->data);
     break;
 
   case 2:
-    buffer = malloc(sizeof(char) * (( 2 + packet.size.length) + ( 2 + packet.name.length) + 1) );
-    buffer[0] = packet.control;
-    buffer[1] = packet.size.type;
-    buffer[2] = packet.size.length;
-    strcpy((buffer + 3), packet.size.value);
-    buffer[3 + packet.size.length] = packet.name.type;
-    buffer[4 + packet.size.length] = packet.name.length;
-    strcpy((buffer + 5 + packet.size.length), packet.name.value);
+    buffer = malloc(sizeof(char) * (( 2 + ctrl_packet_ptr->size.length) + ( 2 + ctrl_packet_ptr->name.length) + 1) );
+    buffer[0] = ctrl_packet_ptr->control;
+    buffer[1] = ctrl_packet_ptr->size.type;
+    buffer[2] = ctrl_packet_ptr->size.length;
+    strcpy((buffer + 3), ctrl_packet_ptr->size.value);
+    buffer[3 + ctrl_packet_ptr->size.length] = ctrl_packet_ptr->name.type;
+    buffer[4 + ctrl_packet_ptr->size.length] = ctrl_packet_ptr->name.length;
+    strcpy((buffer + 5 + ctrl_packet_ptr->size.length), ctrl_packet_ptr->name.value);
+    break;
+
+  case 3:
+    buffer = malloc(sizeof(char) * (( 2 + ctrl_packet_ptr->size.length) + ( 2 + ctrl_packet_ptr->name.length) + 1) );
+    buffer[0] = ctrl_packet_ptr->control;
+    buffer[1] = ctrl_packet_ptr->size.type;
+    buffer[2] = ctrl_packet_ptr->size.length;
+    strcpy((buffer + 3), ctrl_packet_ptr->size.value);
+    buffer[3 + ctrl_packet_ptr->size.length] = ctrl_packet_ptr->name.type;
+    buffer[4 + ctrl_packet_ptr->size.length] = ctrl_packet_ptr->name.length;
+    strcpy((buffer + 5 + ctrl_packet_ptr->size.length), ctrl_packet_ptr->name.value);
     break;
 
   default:
