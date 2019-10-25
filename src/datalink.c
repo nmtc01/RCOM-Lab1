@@ -15,6 +15,7 @@ volatile sig_atomic_t received_disc = 0;
 volatile sig_atomic_t received_i = 0;
 volatile sig_atomic_t n_timeouts = 0;
 volatile sig_atomic_t break_read_loop = 0;
+volatile sig_atomic_t timed_out = 0;
 struct termios oldtio;
 struct termios newtio;
 enum state receiving_ua_state;
@@ -84,6 +85,7 @@ void timeout_handler(){
         receiving_data_state = START_I;
     }
 
+    timed_out = 1;
     break_read_loop = 1;
     n_timeouts++;
 
@@ -580,7 +582,9 @@ int sendITramas(int fd, char *buffer, int length) {
             alarm(0);
 
             //Change sequence number
-            datalink.sequenceNumber = (datalink.sequenceNumber+1) % 2;
+            if (!timed_out)
+                datalink.sequenceNumber = (datalink.sequenceNumber+1) % 2;
+            timed_out = 0;
         }
         else break;
     }
