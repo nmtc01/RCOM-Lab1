@@ -629,7 +629,7 @@ int write_i(int fd, char *buffer, int length) {
     stuf[0] = trama[0];
     stuf[1] = trama[1];
     stuf[2] = trama[2];
-    stuf[3] = trama[3]
+    stuf[3] = trama[3];
     for (int j = 4; j < 5+length; j++) {
         if (trama[j] == FLAG) {
             nr_bytes++;
