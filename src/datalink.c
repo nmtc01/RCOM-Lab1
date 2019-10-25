@@ -68,6 +68,9 @@ void set_flags(int fd){
         exit(-1);
     }
 
+    //Initial sequenceNumber
+    datalink.sequenceNumber = 0;
+
     message("Terminal flags set.");
 }
 
@@ -566,12 +569,10 @@ int sendITramas(int fd, char *buffer, int length) {
     //Reset flag
     received_i = 0;
 
-    //Initial sequenceNumber
-    datalink.sequenceNumber = 0;
-
     while(n_timeouts < datalink.numTransmissions){
         if (!received_i) {
             //Write trama I
+            printf("%d\n", datalink.sequenceNumber);
             message("Writting Trama I");
             res_i = write_i(fd, buffer, length);
             alarm(datalink.timeout);
