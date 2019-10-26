@@ -6,24 +6,24 @@
  * 07/10/2019
  */
 
-#include <unistd.h>
-#include <signal.h>
 #include <fcntl.h>
+#include <libgen.h>
+#include <signal.h>
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <termios.h>
-#include <string.h>
-#include <stdlib.h>
-#include <libgen.h>
+#include <unistd.h>
 
-#define BAUDRATE        B38400
-#define STR_SIZE        255
-#define FRAG_SIZE       128
-#define TRANSMITTER     12
-#define RECEIVER        21
-#define COM1            0
-#define COM2            1
+#define BAUDRATE B38400
+#define STR_SIZE 255
+#define FRAG_SIZE 128
+#define TRANSMITTER 12
+#define RECEIVER 21
+#define COM1 0
+#define COM2 1
 
 // FLAGS
 #define FLAG 0x7E
@@ -69,7 +69,7 @@ struct linkLayer {
     unsigned int numTransmissions;
 };
 
-void message(char* message);
+void message(char *message);
 int open_port(int port);
 void set_flags(int fd);
 void cleanup(int fd);

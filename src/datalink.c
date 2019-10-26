@@ -24,23 +24,24 @@ enum state receiving_disc_state;
 enum state receiving_rr_state;
 enum dataState receiving_data_state;
 
-void message(char* message){
+void message(char *message) {
     printf("!--%s\n", message);
 }
 
-int open_port(int port){
+int open_port(int port) {
     int fd;
 
     if (port)
         strcpy(datalink.port, "/dev/ttyS1");
-    else strcpy(datalink.port, "/dev/ttyS0");
+    else
+        strcpy(datalink.port, "/dev/ttyS0");
 
     fd = open(datalink.port, O_RDWR | O_NOCTTY | O_NONBLOCK);
 
     if (fd < 0)
         return fd;
 
-	message("Opened serial port.");
+    message("Opened serial port.");
 
     //Set flags
     set_flags(fd);
@@ -48,7 +49,7 @@ int open_port(int port){
     return fd;
 }
 
-void set_flags(int fd){
+void set_flags(int fd) {
     if (tcgetattr(fd, &oldtio) == -1) {
         perror("tcgetattr");
         exit(-1);
@@ -74,16 +75,14 @@ void set_flags(int fd){
     message("Terminal flags set.");
 }
 
-void timeout_handler(){
+void timeout_handler() {
     if (receiving_ua_state != FINISH) {
         received_ua = 0;
         receiving_ua_state = START;
-    }
-    else if (receiving_disc_state != FINISH) {
+    } else if (receiving_disc_state != FINISH) {
         received_disc = 0;
         receiving_disc_state = START;
-    }
-    else if (receiving_data_state != FINISH_I) {
+    } else if (receiving_data_state != FINISH_I) {
         received_i = 0;
         receiving_data_state = START_I;
     }
@@ -95,16 +94,16 @@ void timeout_handler(){
     message("Timed out.");
 }
 
-int sendStablishTramas(int fd, int status){
+int sendStablishTramas(int fd, int status) {
     //Install timeout handler
-    (void) signal(SIGALRM, timeout_handler);
+    (void)signal(SIGALRM, timeout_handler);
     datalink.numTransmissions = 3;
     datalink.timeout = 1;
 
     if (status == TRANSMITTER) {
         //Transmitter
 
-        while(n_timeouts < datalink.numTransmissions){
+        while (n_timeouts < datalink.numTransmissions) {
             if (!received_ua) {
                 //Write set
                 message("Writting set");
@@ -117,16 +116,15 @@ int sendStablishTramas(int fd, int status){
                 message("Reading ua");
                 read_ua(fd, status);
                 alarm(0);
-            }
-            else break;
+            } else
+                break;
         }
 
         //Stop execution if could not stablish connection after MAX_TIMEOUTS
         if (!received_ua)
             return -1;
 
-    }
-    else {
+    } else {
         //Receiver
 
         //Read set
@@ -136,13 +134,12 @@ int sendStablishTramas(int fd, int status){
         //Write ua
         message("Writting ua");
         int res_ua = write_ua(fd, status);
-
     }
 
     //Reset number of timeouts and flags
-        n_timeouts = 0;
-        received_ua = 0;
-        break_read_loop = 0;
+    n_timeouts = 0;
+    received_ua = 0;
+    break_read_loop = 0;
 
     return 0;
 }
@@ -156,7 +153,7 @@ int write_set(int fd) {
     set[3] = A_CMD ^ C_SET;
     set[4] = FLAG;
 
-    int res = write(fd, set, 5*sizeof(char));
+    int res = write(fd, set, 5 * sizeof(char));
     printf("%02x%02x%02x%02x%02x - %d bytes written\n", set[0], set[1], set[2], set[3], set[4], res);
 
     return res;
@@ -175,83 +172,71 @@ void read_ua(int fd, int status) {
     u_int8_t A;
     if (status == TRANSMITTER)
         A = A_CMD;
-    else A = A_ANS;
+    else
+        A = A_ANS;
 
     while (!break_read_loop) {
         res = read(fd, read_char, sizeof(char));
         ua[n_bytes] = read_char[0];
 
         switch (receiving_ua_state) {
-            case START:
-            {
+            case START: {
                 if (read_char[0] == FLAG) {
                     receiving_ua_state = FLAG_RCV;
                     n_bytes++;
                 }
                 break;
             }
-            case FLAG_RCV:
-            {
+            case FLAG_RCV: {
                 if (read_char[0] == A) {
                     receiving_ua_state = A_RCV;
                     n_bytes++;
-                }
-                else if (read_char[0] == FLAG) {
+                } else if (read_char[0] == FLAG) {
                     n_bytes = 1;
                     break;
-                }
-                else {
+                } else {
                     receiving_ua_state = START;
                     n_bytes = 0;
                 }
                 break;
             }
-            case A_RCV:
-            {
+            case A_RCV: {
                 if (read_char[0] == C_UA) {
                     receiving_ua_state = C_RCV;
                     n_bytes++;
-                }
-                else if (read_char[0] == FLAG) {
+                } else if (read_char[0] == FLAG) {
                     receiving_ua_state = FLAG_RCV;
                     n_bytes = 1;
-                }
-                else {
+                } else {
                     receiving_ua_state = START;
                     n_bytes = 0;
                 }
                 break;
             }
-            case C_RCV:
-            {
-                if (read_char[0] == A^C_UA) {
+            case C_RCV: {
+                if (read_char[0] == A ^ C_UA) {
                     receiving_ua_state = BCC_OK;
                     n_bytes++;
-                }
-                else if (read_char[0] == FLAG) {
+                } else if (read_char[0] == FLAG) {
                     receiving_ua_state = FLAG_RCV;
                     n_bytes = 1;
-                }
-                else {
+                } else {
                     receiving_ua_state = START;
                     n_bytes = 0;
                 }
                 break;
             }
-            case BCC_OK:
-            {
+            case BCC_OK: {
                 if (read_char[0] == FLAG) {
                     receiving_ua_state = FINISH;
                     n_bytes++;
-                }
-                else {
+                } else {
                     receiving_ua_state = START;
                     n_bytes = 0;
                 }
                 break;
             }
-            case FINISH:
-            {
+            case FINISH: {
                 break_read_loop = 1;
                 received_ua = 1;
                 break;
@@ -276,102 +261,89 @@ void read_set(int fd) {
         set[n_bytes] = read_char[0];
 
         switch (receiving_set_state) {
-        case START:
-        {
-            if (read_char[0] == FLAG) {
-            receiving_set_state = FLAG_RCV;
-            n_bytes++;
+            case START: {
+                if (read_char[0] == FLAG) {
+                    receiving_set_state = FLAG_RCV;
+                    n_bytes++;
+                }
+                break;
             }
-            break;
-        }
-        case FLAG_RCV:
-        {
-            if (read_char[0] == A_CMD) {
-            receiving_set_state = A_RCV;
-            n_bytes++;
+            case FLAG_RCV: {
+                if (read_char[0] == A_CMD) {
+                    receiving_set_state = A_RCV;
+                    n_bytes++;
+                } else if (read_char[0] == FLAG) {
+                    n_bytes = 1;
+                    break;
+                } else {
+                    receiving_set_state = START;
+                    n_bytes = 0;
+                }
+                break;
             }
-            else if (read_char[0] == FLAG) {
-            n_bytes = 1;
-            break;
+            case A_RCV: {
+                if (read_char[0] == C_SET) {
+                    receiving_set_state = C_RCV;
+                    n_bytes++;
+                } else if (read_char[0] == FLAG) {
+                    receiving_set_state = FLAG_RCV;
+                    n_bytes = 1;
+                } else {
+                    receiving_set_state = START;
+                    n_bytes = 0;
+                }
+                break;
             }
-            else {
-            receiving_set_state = START;
-            n_bytes = 0;
+            case C_RCV: {
+                if (read_char[0] == A_CMD ^ C_SET) {
+                    receiving_set_state = BCC_OK;
+                    n_bytes++;
+                } else if (read_char[0] == FLAG) {
+                    receiving_set_state = FLAG_RCV;
+                    n_bytes = 1;
+                } else {
+                    receiving_set_state = START;
+                    n_bytes = 0;
+                }
+                break;
             }
-            break;
-        }
-        case A_RCV:
-        {
-            if (read_char[0] == C_SET) {
-            receiving_set_state = C_RCV;
-            n_bytes++;
+            case BCC_OK: {
+                if (read_char[0] == FLAG) {
+                    receiving_set_state = FINISH;
+                    n_bytes++;
+                } else {
+                    receiving_set_state = START;
+                    n_bytes = 0;
+                }
+                break;
             }
-            else if (read_char[0] == FLAG) {
-            receiving_set_state = FLAG_RCV;
-            n_bytes = 1;
+            case FINISH: {
+                received_set = 1;
+                break;
             }
-            else {
-            receiving_set_state = START;
-            n_bytes = 0;
-            }
-            break;
-        }
-        case C_RCV:
-        {
-            if (read_char[0] == A_CMD^C_SET) {
-            receiving_set_state = BCC_OK;
-            n_bytes++;
-            }
-            else if (read_char[0] == FLAG) {
-            receiving_set_state = FLAG_RCV;
-            n_bytes = 1;
-            }
-            else {
-            receiving_set_state = START;
-            n_bytes = 0;
-            }
-            break;
-        }
-        case BCC_OK:
-        {
-            if (read_char[0] == FLAG) {
-            receiving_set_state = FINISH;
-            n_bytes++;
-            }
-            else {
-            receiving_set_state = START;
-            n_bytes = 0;
-            }
-            break;
-        }
-        case FINISH:
-        {
-            received_set = 1;
-            break;
-        }
         }
     }
-    printf("%02x%02x%02x%02x%02x - %d bytes read\n", set[0],set[1],set[2],set[3],set[4], n_bytes);
-
+    printf("%02x%02x%02x%02x%02x - %d bytes read\n", set[0], set[1], set[2], set[3], set[4], n_bytes);
 }
 
 int write_ua(int fd, int status) {
-
     //Create trama UA
     unsigned char ua[5];
     ua[0] = FLAG;
     if (status == TRANSMITTER)
         ua[1] = A_ANS;
-    else ua[1] = A_CMD;
+    else
+        ua[1] = A_CMD;
     ua[2] = C_UA;
     if (status == TRANSMITTER)
         ua[3] = A_ANS ^ C_UA;
-    else ua[3] = A_CMD ^ C_UA;
+    else
+        ua[3] = A_CMD ^ C_UA;
     ua[4] = FLAG;
 
     // WRITE
-    int res = write(fd, ua, 5*sizeof(char));
-    printf("%02x%02x%02x%02x%02x - %d bytes written\n", ua[0],ua[1],ua[2],ua[3],ua[4], res);
+    int res = write(fd, ua, 5 * sizeof(char));
+    printf("%02x%02x%02x%02x%02x - %d bytes written\n", ua[0], ua[1], ua[2], ua[3], ua[4], res);
 
     return res;
 }
@@ -380,7 +352,7 @@ int sendDiscTramas(int fd, int status) {
     if (status == TRANSMITTER) {
         //Transmitter
 
-        while(n_timeouts < datalink.numTransmissions){
+        while (n_timeouts < datalink.numTransmissions) {
             if (!received_disc) {
                 //Write disc
                 message("Writting disc");
@@ -393,8 +365,8 @@ int sendDiscTramas(int fd, int status) {
                 message("Reading disc");
                 read_disc(fd, status);
                 alarm(0);
-            }
-            else break;
+            } else
+                break;
         }
 
         //Stop execution if could not stablish connection after MAX_TIMEOUTS
@@ -407,15 +379,14 @@ int sendDiscTramas(int fd, int status) {
         if (res_ua < 0)
             return res_ua;
 
-    }
-    else {
+    } else {
         //Receiver
 
         //Read disc
         message("Reading disc");
         read_disc(fd, status);
 
-        while(n_timeouts < datalink.numTransmissions) {
+        while (n_timeouts < datalink.numTransmissions) {
             if (!received_ua) {
                 //Write disc
                 message("Writting disc");
@@ -428,8 +399,8 @@ int sendDiscTramas(int fd, int status) {
                 message("Reading ua");
                 read_ua(fd, status);
                 alarm(0);
-            }
-            else break;
+            } else
+                break;
         }
     }
 
@@ -442,14 +413,16 @@ int write_disc(int fd, int status) {
     disc[0] = FLAG;
     if (status == TRANSMITTER)
         disc[1] = A_CMD;
-    else disc[1] = A_ANS;
+    else
+        disc[1] = A_ANS;
     disc[2] = C_DISC;
     if (status == TRANSMITTER)
         disc[3] = A_CMD ^ C_DISC;
-    else disc[3] = A_ANS ^ C_DISC;
+    else
+        disc[3] = A_ANS ^ C_DISC;
     disc[4] = FLAG;
 
-    int res = write(fd, disc, 5*sizeof(char));
+    int res = write(fd, disc, 5 * sizeof(char));
     printf("%02x%02x%02x%02x%02x - %d bytes written\n", disc[0], disc[1], disc[2], disc[3], disc[4], res);
 
     return res;
@@ -464,7 +437,8 @@ void read_disc(int fd, int status) {
     u_int8_t A;
     if (status == TRANSMITTER)
         A = A_ANS;
-    else A = A_CMD;
+    else
+        A = A_CMD;
 
     receiving_disc_state = START;
     break_read_loop = 0;
@@ -474,87 +448,74 @@ void read_disc(int fd, int status) {
         disc[n_bytes] = read_char[0];
 
         switch (receiving_disc_state) {
-            case START:
-            {
+            case START: {
                 if (read_char[0] == FLAG) {
                     receiving_disc_state = FLAG_RCV;
                     n_bytes++;
                 }
                 break;
             }
-            case FLAG_RCV:
-            {
+            case FLAG_RCV: {
                 if (read_char[0] == A) {
                     receiving_disc_state = A_RCV;
                     n_bytes++;
-                }
-                else if (read_char[0] == FLAG) {
+                } else if (read_char[0] == FLAG) {
                     n_bytes = 1;
                     break;
-                }
-                else {
+                } else {
                     receiving_disc_state = START;
                     n_bytes = 0;
                 }
                 break;
             }
-            case A_RCV:
-            {
+            case A_RCV: {
                 if (read_char[0] == C_DISC) {
                     receiving_disc_state = C_RCV;
                     n_bytes++;
-                }
-                else if (read_char[0] == FLAG) {
+                } else if (read_char[0] == FLAG) {
                     receiving_disc_state = FLAG_RCV;
                     n_bytes = 1;
-                }
-                else {
+                } else {
                     receiving_disc_state = START;
                     n_bytes = 0;
                 }
                 break;
             }
-            case C_RCV:
-            {
-                if (read_char[0] == A^C_DISC) {
+            case C_RCV: {
+                if (read_char[0] == A ^ C_DISC) {
                     receiving_disc_state = BCC_OK;
                     n_bytes++;
-                }
-                else if (read_char[0] == FLAG) {
+                } else if (read_char[0] == FLAG) {
                     receiving_disc_state = FLAG_RCV;
                     n_bytes = 1;
-                }
-                else {
+                } else {
                     receiving_disc_state = START;
                     n_bytes = 0;
                 }
                 break;
             }
-            case BCC_OK:
-            {
+            case BCC_OK: {
                 if (read_char[0] == FLAG) {
                     receiving_disc_state = FINISH;
                     n_bytes++;
-                }
-                else {
+                } else {
                     receiving_disc_state = START;
                     n_bytes = 0;
                 }
                 break;
             }
-            case FINISH:
-            {
+            case FINISH: {
                 break_read_loop = 1;
                 received_disc = 1;
                 break;
             }
-            }
+        }
     }
 
     printf("%02x%02x%02x%02x%02x - %d bytes read\n", disc[0], disc[1], disc[2], disc[3], disc[4], n_bytes);
 }
 
-void cleanup(int fd){
+void cleanup(int fd) {
     if (tcsetattr(fd, TCSANOW, &oldtio) == -1) {
         perror("tcsetattr");
         exit(-1);
@@ -569,7 +530,7 @@ int sendITramas(int fd, char *buffer, int length) {
     //Reset flag
     received_i = 0;
 
-    while(n_timeouts < datalink.numTransmissions){
+    while (n_timeouts < datalink.numTransmissions) {
         if (!received_i) {
             //Write trama I
             message("Writting Trama I");
@@ -583,10 +544,10 @@ int sendITramas(int fd, char *buffer, int length) {
 
             //Change sequence number
             if (!timed_out)
-                datalink.sequenceNumber = (datalink.sequenceNumber+1) % 2;
+                datalink.sequenceNumber = (datalink.sequenceNumber + 1) % 2;
             timed_out = 0;
-        }
-        else break;
+        } else
+            break;
     }
 
     //Stop execution if could not send trama I after MAX_TIMEOUTS
@@ -607,34 +568,34 @@ int receiveITramas(int fd, char *buffer) {
 
     //Change sequence number
     if (!timed_out)
-        datalink.sequenceNumber = (datalink.sequenceNumber+1) % 2;
+        datalink.sequenceNumber = (datalink.sequenceNumber + 1) % 2;
     timed_out = 0;
 
     return data_bytes;
 }
 
 int write_i(int fd, char *buffer, int length) {
-
     //Create trama
-    unsigned char trama[6+length];
+    unsigned char trama[6 + length];
     u_int8_t bcc2 = 0x00;
     trama[0] = FLAG;
     trama[1] = A_CMD;
     if (datalink.sequenceNumber)
         trama[2] = C_1;
-    else trama[2] = C_0;
-    trama[3] = A_CMD^trama[2];
+    else
+        trama[2] = C_0;
+    trama[3] = A_CMD ^ trama[2];
 
     for (int i = 0; i < length; i++) {
-        trama[4+i] = buffer[i];
+        trama[4 + i] = buffer[i];
         bcc2 = bcc2 ^ buffer[i];
     }
-    trama[4+length] = bcc2;
-    trama[5+length] = FLAG;
+    trama[4 + length] = bcc2;
+    trama[5 + length] = FLAG;
 
     //Stuffing
     int new_bytes = 0;
-    int nr_bytes = 6+length;
+    int nr_bytes = 6 + length;
 
     unsigned char *stuf = malloc(nr_bytes);
 
@@ -642,24 +603,23 @@ int write_i(int fd, char *buffer, int length) {
     stuf[1] = trama[1];
     stuf[2] = trama[2];
     stuf[3] = trama[3];
-    for (int j = 4; j < 5+length; j++) {
+    for (int j = 4; j < 5 + length; j++) {
         if (trama[j] == FLAG) {
             nr_bytes++;
             new_bytes++;
             stuf = (char *)realloc(stuf, nr_bytes);
-            stuf[j+new_bytes-1] = ESCAPE;
-            stuf[j+new_bytes] = FLAG^STUF;
-        }
-        else if (trama[j] == ESCAPE) {
+            stuf[j + new_bytes - 1] = ESCAPE;
+            stuf[j + new_bytes] = FLAG ^ STUF;
+        } else if (trama[j] == ESCAPE) {
             nr_bytes++;
             new_bytes++;
             stuf = (char *)realloc(stuf, nr_bytes);
-            stuf[j+new_bytes-1] = ESCAPE;
-            stuf[j+new_bytes] = ESCAPE^STUF;
-        }
-        else stuf[j+new_bytes] = trama[j];
+            stuf[j + new_bytes - 1] = ESCAPE;
+            stuf[j + new_bytes] = ESCAPE ^ STUF;
+        } else
+            stuf[j + new_bytes] = trama[j];
     }
-    stuf[nr_bytes-1] = FLAG;
+    stuf[nr_bytes - 1] = FLAG;
 
     //Write trama I
     int res = write(fd, stuf, nr_bytes);
@@ -669,13 +629,12 @@ int write_i(int fd, char *buffer, int length) {
     }
     printf("%02x - %d data bytes written\n", stuf[nr_bytes-1], length);*/
 
-
     return length;
 }
 
 int read_i(int fd, char *buffer) {
     unsigned char trama[STR_SIZE];
-    unsigned char data[FRAG_SIZE+1];
+    unsigned char data[FRAG_SIZE + 1];
     int res;
     int n_bytes = 0;
     int data_bytes = 0;
@@ -697,69 +656,57 @@ int read_i(int fd, char *buffer) {
         }
 
         switch (receiving_data_state) {
-            case START_I:
-            {
+            case START_I: {
                 if (read_char[0] == FLAG) {
                     receiving_data_state = FLAG_RCV_I;
                     n_bytes++;
                 }
                 break;
             }
-            case FLAG_RCV_I:
-            {
+            case FLAG_RCV_I: {
                 if (read_char[0] == A_CMD) {
                     receiving_data_state = A_RCV_I;
                     n_bytes++;
-                }
-                else if (read_char[0] == FLAG) {
+                } else if (read_char[0] == FLAG) {
                     n_bytes = 1;
                     break;
-                }
-                else {
+                } else {
                     receiving_data_state = START_I;
                     n_bytes = 0;
                 }
                 break;
             }
-            case A_RCV_I:
-            {
+            case A_RCV_I: {
                 if ((read_char[0] == C_0 && (!datalink.sequenceNumber)) || (read_char[0] == C_1 && datalink.sequenceNumber)) {
                     receiving_data_state = C_RCV_I;
                     n_bytes++;
-                }
-                else if (read_char[0] == FLAG) {
+                } else if (read_char[0] == FLAG) {
                     receiving_data_state = FLAG_RCV_I;
                     n_bytes = 1;
                     break;
-                }
-                else {
+                } else {
                     receiving_data_state = START_I;
                     n_bytes = 0;
                 }
                 break;
             }
-            case C_RCV_I:
-            {
-                if (read_char[0] == A_CMD^C_0 || read_char[0] == A_CMD^C_1) {
+            case C_RCV_I: {
+                if (read_char[0] == A_CMD ^ C_0 || read_char[0] == A_CMD ^ C_1) {
                     receiving_data_state = BCC1_OK_I;
                     n_bytes++;
-                }
-                else if (read_char[0] == FLAG) {
+                } else if (read_char[0] == FLAG) {
                     receiving_data_state = FLAG_RCV_I;
                     n_bytes = 1;
-                }
-                else {
+                } else {
                     receiving_data_state = START_I;
                     n_bytes = 0;
                 }
                 break;
             }
-            case BCC1_OK_I:
-            {
+            case BCC1_OK_I: {
                 if (read_char[0] == ESCAPE) {
                     receiving_data_state = ESCAPE_RCV_I;
-                }
-                else {
+                } else {
                     receiving_data_state = DATA_RCV_I;
                     data[data_bytes] = trama[n_bytes];
                     n_bytes++;
@@ -767,49 +714,42 @@ int read_i(int fd, char *buffer) {
                 }
                 break;
             }
-            case DATA_RCV_I:
-            {
+            case DATA_RCV_I: {
                 if (read_char[0] == FLAG) {
                     receiving_data_state = FLAG2_RCV_I;
                     received_second_flag = 1;
                     n_bytes++;
-                }
-                else if (read_char[0] == ESCAPE) {
+                } else if (read_char[0] == ESCAPE) {
                     receiving_data_state = ESCAPE_RCV_I;
-                }
-                else {
+                } else {
                     data[data_bytes] = trama[n_bytes];
                     n_bytes++;
                     data_bytes++;
                 }
                 break;
             }
-            case FLAG2_RCV_I:
-            {
+            case FLAG2_RCV_I: {
                 u_int8_t bcc = 0x00;
-                for (int i = n_bytes-data_bytes-1; i < n_bytes-2; i++) {
-                    bcc = bcc^trama[i];
+                for (int i = n_bytes - data_bytes - 1; i < n_bytes - 2; i++) {
+                    bcc = bcc ^ trama[i];
                 }
-                if (trama[n_bytes-2] == bcc) {
+                if (trama[n_bytes - 2] == bcc) {
                     data_bytes--;
                     receiving_data_state = FINISH_I;
-                }
-                else {
+                } else {
                     receiving_data_state = FINISH_I;
                     data_bytes = 0;
                 }
                 break;
             }
-            case FINISH_I:
-            {
+            case FINISH_I: {
                 break_read_loop = 1;
                 received_i = 1;
                 break;
             }
-            case ESCAPE_RCV_I:
-            {
+            case ESCAPE_RCV_I: {
                 receiving_data_state = DATA_RCV_I;
-                trama[n_bytes] = read_char[0]^STUF;
+                trama[n_bytes] = read_char[0] ^ STUF;
                 data[data_bytes] = trama[n_bytes];
                 data_bytes++;
                 n_bytes++;
@@ -829,20 +769,21 @@ int read_i(int fd, char *buffer) {
 }
 
 int write_rr(int fd) {
-
     //Create trama rr
     unsigned char rr[5];
     rr[0] = FLAG;
     rr[1] = A_CMD;
     if (datalink.sequenceNumber)
         rr[2] = C_RR0;
-    else rr[2] = C_RR1;
+    else
+        rr[2] = C_RR1;
     if (datalink.sequenceNumber)
-        rr[3] = A_CMD^C_RR0;
-    else rr[3] = A_CMD^C_RR1;
+        rr[3] = A_CMD ^ C_RR0;
+    else
+        rr[3] = A_CMD ^ C_RR1;
     rr[4] = FLAG;
 
-    int res = write(fd, rr, 5*sizeof(char));
+    int res = write(fd, rr, 5 * sizeof(char));
     printf("%02x%02x%02x%02x%02x - %d bytes written\n", rr[0], rr[1], rr[2], rr[3], rr[4], res);
 
     return res;
@@ -858,86 +799,74 @@ void read_rr(int fd) {
 
     receiving_rr_state = START;
     break_read_loop = 0;
-    
+
     while (!break_read_loop) {
         res = read(fd, read_char, sizeof(char));
         rr[n_bytes] = read_char[0];
 
         switch (receiving_rr_state) {
-            case START:
-            {
+            case START: {
                 if (read_char[0] == FLAG) {
                     receiving_rr_state = FLAG_RCV;
                     n_bytes++;
                 }
                 break;
             }
-            case FLAG_RCV:
-            {
+            case FLAG_RCV: {
                 if (read_char[0] == A_CMD) {
                     receiving_rr_state = A_RCV;
                     n_bytes++;
-                }
-                else if (read_char[0] == FLAG) {
+                } else if (read_char[0] == FLAG) {
                     n_bytes = 1;
                     break;
-                }
-                else {
+                } else {
                     receiving_rr_state = START;
                     n_bytes = 0;
                 }
                 break;
             }
-            case A_RCV:
-            {
+            case A_RCV: {
                 if (datalink.sequenceNumber)
                     c_rr = C_RR0;
-                else c_rr = C_RR1;
+                else
+                    c_rr = C_RR1;
 
                 if (read_char[0] == c_rr) {
                     receiving_rr_state = C_RCV;
                     n_bytes++;
-                }
-                else if (read_char[0] == FLAG) {
+                } else if (read_char[0] == FLAG) {
                     receiving_rr_state = FLAG_RCV;
                     n_bytes = 1;
-                }
-                else {
+                } else {
                     receiving_rr_state = START;
                     n_bytes = 0;
                 }
                 break;
             }
-            case C_RCV:
-            {
-                if (read_char[0] == A_CMD^c_rr) {
+            case C_RCV: {
+                if (read_char[0] == A_CMD ^ c_rr) {
                     receiving_rr_state = BCC_OK;
                     n_bytes++;
-                }
-                else if (read_char[0] == FLAG) {
+                } else if (read_char[0] == FLAG) {
                     receiving_rr_state = FLAG_RCV;
                     n_bytes = 1;
-                }
-                else {
+                } else {
                     receiving_rr_state = START;
                     n_bytes = 0;
                 }
                 break;
             }
-            case BCC_OK:
-            {
+            case BCC_OK: {
                 if (read_char[0] == FLAG) {
                     receiving_rr_state = FINISH;
                     n_bytes++;
-                }
-                else {
+                } else {
                     receiving_rr_state = START;
                     n_bytes = 0;
                 }
                 break;
             }
-            case FINISH:
-            {
+            case FINISH: {
                 break_read_loop = 1;
                 received_i = 1;
                 break;
