@@ -19,7 +19,7 @@
 
 #define BAUDRATE B38400
 #define STR_SIZE 255
-#define FRAG_SIZE 128
+#define FRAG_SIZE 251
 #define TRANSMITTER 12
 #define RECEIVER 21
 #define COM1 0
