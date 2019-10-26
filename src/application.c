@@ -150,7 +150,7 @@ int llopen(int port, int status) {
 }
 
 int llwrite(int fd, char* packet, int length) {
-    int nr_chars = sendITramas(fd, buffer, length);
+    int nr_chars = sendITramas(fd, packet, length);
     if (nr_chars < 0)
         return -1;
 
@@ -182,13 +182,15 @@ void make_packets(int fd_file, ctrl_packet* start_packet, ctrl_packet* end_packe
 
     tlv_packet size_tlv, name_tlv;
 
+    char size[sizeof(int)/sizeof(char)];
+    sprintf(size, "%d", file_stat.st_size);
     size_tlv.type = 0;
     size_tlv.length = sizeof(int);
-    size_tlv.value = file_stat.st_size;
+    size_tlv.value = size;
 
     name_tlv.type = 1;
-    name_tlv.value = basename(FILE_TO_SEND);
     name_tlv.length = sizeof(char) * strlen(name_tlv.value);
+    name_tlv.value = basename(FILE_TO_SEND);
 
     data_packet->control = 1;
     data_packet->sequence_number = 255;
