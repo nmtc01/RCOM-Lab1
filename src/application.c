@@ -52,7 +52,7 @@ int main(int argc, char **argv) {
 
     // Fragments of file to send
     char fragment[FRAG_SIZE];
-    char *buffer;
+    char *buffer = malloc(STR_SIZE);
     int numbytes, size_packet, n_chars_written;
 
     // Write information
@@ -61,8 +61,7 @@ int main(int argc, char **argv) {
     // Send START packet
     size_packet = packet_to_array(&start_packet, buffer);
     n_chars_written = llwrite(application.fd_port, buffer, size_packet);
-    printf("\n SIZE PACKET %d\n", size_packet);
-    free(buffer);
+    printf("----SIZE PACKET %d\n", size_packet);
     printf("F NO CHAT\n");
     if (n_chars_written < 0) {
       perror("llwrite");
