@@ -188,8 +188,7 @@ int llclose(int fd, int status) {
   return 1;
 }
 
-void make_packets(int fd_file, ctrl_packet *start_packet,
-                  ctrl_packet *end_packet, data_packet *data_packet) {
+void make_packets(int fd_file, ctrl_packet *start_packet, ctrl_packet *end_packet, data_packet *data_packet) {
   struct stat file_stat;
   if (fstat(fd_file, &file_stat) < 0) {
     message("Error reading file. Exitting.");
@@ -198,15 +197,15 @@ void make_packets(int fd_file, ctrl_packet *start_packet,
 
   tlv_packet size_tlv, name_tlv;
 
-  char size[sizeof(int) / sizeof(char)];
-  sprintf(size, "%d", file_stat.st_size);
   size_tlv.type = 0;
-  size_tlv.length = sizeof(int);
-  size_tlv.value = size;
+  size_tlv.length = sizeof(int) / sizeof(char);
+  size_tlv.value = malloc(size_tlv.length);
+  sprintf(size_tlv.value, "%d", file_stat.st_size);
 
   name_tlv.type = 1;
   name_tlv.length = sizeof(char) * strlen(name_tlv.value);
-  name_tlv.value = basename(FILE_TO_SEND);
+  name_tlv.value = malloc(name_tlv.length);
+  sprintf(size_tlv.value, "%s", basename(FILE_TO_SEND));
 
   data_packet->control = 1;
   data_packet->sequence_number = 255;
