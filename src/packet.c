@@ -64,6 +64,7 @@ int packet_to_array(void *packet_void_ptr, char *buffer) {
       exit(3);
     }
     size_allocated = sizeof(char) * ((2 + ctrl_packet_ptr->size.length) + (2 + ctrl_packet_ptr->name.length) + 1);
+    printf("----SIZE %d", size_allocated);
     buffer[0] = ctrl_packet_ptr->control;
     buffer[1] = ctrl_packet_ptr->size.type;
     buffer[2] = ctrl_packet_ptr->size.length;
