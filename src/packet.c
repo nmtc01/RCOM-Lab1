@@ -36,20 +36,13 @@ void make_packets(int fd_file, ctrl_packet *start_packet, ctrl_packet *end_packe
   sprintf(end_packet->size.value, "%s", basename(FILE_TO_SEND));
 }
 
-int packet_to_array(void *packet_void_ptr, char *buffer) {
-  int size_allocated;
+void packet_to_array(void *packet_void_ptr, char *buffer) {
   data_packet *data_packet_ptr = (data_packet *)packet_void_ptr;
   ctrl_packet *ctrl_packet_ptr = (ctrl_packet *)packet_void_ptr;
 
   switch (data_packet_ptr->control) {
   // DATA PACKET
   case 1:
-    buffer = realloc(buffer, sizeof(char) * (4 + data_packet_ptr->nr_bytes2 * 256 + data_packet_ptr->nr_bytes1));
-    if (buffer == NULL) {
-      message("Failed to allocate space.");
-      exit(3);
-    }
-    size_allocated = sizeof(char) * (4 + data_packet_ptr->nr_bytes2 * 256 + data_packet_ptr->nr_bytes1);
     buffer[0] = data_packet_ptr->control;
     buffer[1] = data_packet_ptr->sequence_number;
     buffer[2] = data_packet_ptr->nr_bytes2;
@@ -58,13 +51,6 @@ int packet_to_array(void *packet_void_ptr, char *buffer) {
     break;
   // START PACKET
   case 2:
-    buffer = realloc(buffer, sizeof(char) * ((2 + ctrl_packet_ptr->size.length) + (2 + ctrl_packet_ptr->name.length) + 1));
-    if (buffer == NULL) {
-      message("Failed to allocate space.");
-      exit(3);
-    }
-    size_allocated = sizeof(char) * ((2 + ctrl_packet_ptr->size.length) + (2 + ctrl_packet_ptr->name.length) + 1);
-    printf("----SIZE %d", size_allocated);
     buffer[0] = ctrl_packet_ptr->control;
     buffer[1] = ctrl_packet_ptr->size.type;
     buffer[2] = ctrl_packet_ptr->size.length;
@@ -75,40 +61,26 @@ int packet_to_array(void *packet_void_ptr, char *buffer) {
     break;
   // END PACKET
   case 3:
-    buffer = realloc(buffer, sizeof(char) * ((2 + ctrl_packet_ptr->size.length) + (2 + ctrl_packet_ptr->name.length) + 1));
-    if (buffer == NULL) {
-      message("Failed to allocate space.");
-      exit(3);
-    }
-    size_allocated = sizeof(char) * ((2 + ctrl_packet_ptr->size.length) + (2 + ctrl_packet_ptr->name.length) + 1);
     buffer[0] = ctrl_packet_ptr->control;
     buffer[1] = ctrl_packet_ptr->size.type;
     buffer[2] = ctrl_packet_ptr->size.length;
     strcpy((buffer + 3), ctrl_packet_ptr->size.value);
     buffer[3 + ctrl_packet_ptr->size.length] = ctrl_packet_ptr->name.type;
     buffer[4 + ctrl_packet_ptr->size.length] = ctrl_packet_ptr->name.length;
-    strcpy((buffer + 5 + ctrl_packet_ptr->size.length),
-           ctrl_packet_ptr->name.value);
+    strcpy((buffer + 5 + ctrl_packet_ptr->size.length), ctrl_packet_ptr->name.value);
     break;
 
   default:
     break;
   }
-  return size_allocated;
 }
 
 void array_to_packet(void *packet_void_ptr, char *buffer) {
-  ctrl_packet *ctrl_packet_ptr;
-  data_packet *data_packet_ptr;
-
+  data_packet *data_packet_ptr = (data_packet *)packet_void_ptr;
+  ctrl_packet *ctrl_packet_ptr = (ctrl_packet *)packet_void_ptr;
   switch (buffer[0]) {
   // DATA
   case 1:
-    data_packet_ptr = realloc(buffer, sizeof(char) * (4 + buffer[2] * 256 + buffer[3]));
-    if (data_packet_ptr == NULL) {
-      message("Failed to allocate space.");
-      exit(3);
-    }
     data_packet_ptr->control = buffer[0];
     data_packet_ptr->sequence_number = buffer[1];
     data_packet_ptr->nr_bytes2 = buffer[2];
@@ -117,17 +89,12 @@ void array_to_packet(void *packet_void_ptr, char *buffer) {
     break;
   // START
   case 2:
-    ctrl_packet_ptr = realloc(buffer, sizeof(char) * (2 + buffer[2] + 2 + buffer[4 + buffer[2]] + 1));
-    if (ctrl_packet_ptr == NULL) {
-      message("Failed to allocate space.");
-      exit(3);
-    }
     ctrl_packet_ptr->control = buffer[0];
     ctrl_packet_ptr->size.type = buffer[1];
     ctrl_packet_ptr->size.length = buffer[2];
     ctrl_packet_ptr->size.value = malloc(buffer[2]);
     if (ctrl_packet_ptr->size.value == NULL) {
-      message("Failed to allocate space.");
+      message("Failed to allocate space. SIZE VALUE");
       exit(3);
     }
     strcpy(ctrl_packet_ptr->size.value, (buffer + 3));
@@ -136,24 +103,19 @@ void array_to_packet(void *packet_void_ptr, char *buffer) {
     ctrl_packet_ptr->name.length = buffer[4 + buffer[2]];
     ctrl_packet_ptr->name.value = malloc(buffer[4 + buffer[2]]);
     if (ctrl_packet_ptr->name.value == NULL) {
-      message("Failed to allocate space.");
+      message("Failed to allocate space. NAME VALUE");
       exit(3);
     }
     strcpy(ctrl_packet_ptr->size.value, (buffer + 5 + buffer[2]));
     break;
   // END
   case 3:
-    ctrl_packet_ptr = realloc(buffer, sizeof(char) * (2 + buffer[2] + 2 + buffer[4 + buffer[2]] + 1));
-    if (ctrl_packet_ptr == NULL) {
-      message("Failed to allocate space.");
-      exit(3);
-    }
     ctrl_packet_ptr->control = buffer[0];
     ctrl_packet_ptr->size.type = buffer[1];
     ctrl_packet_ptr->size.length = buffer[2];
     ctrl_packet_ptr->size.value = malloc(buffer[2]);
     if (ctrl_packet_ptr->size.value == NULL) {
-      message("Failed to allocate space.");
+      message("Failed to allocate space. SIZE VALUE");
       exit(3);
     }
     strcpy(ctrl_packet_ptr->size.value, (buffer + 3));
@@ -162,7 +124,7 @@ void array_to_packet(void *packet_void_ptr, char *buffer) {
     ctrl_packet_ptr->name.length = buffer[4 + buffer[2]];
     ctrl_packet_ptr->name.value = malloc(buffer[4 + buffer[2]]);
     if (ctrl_packet_ptr->name.value == NULL) {
-      message("Failed to allocate space.");
+      message("Failed to allocate space. SIZE VALUE");
       exit(3);
     }
     strcpy(ctrl_packet_ptr->size.value, (buffer + 5 + buffer[2]));

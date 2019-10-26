@@ -59,10 +59,8 @@ int main(int argc, char **argv) {
     message("Started llwrite");
 
     // Send START packet
-    size_packet = packet_to_array(&start_packet, buffer);
-    n_chars_written = llwrite(application.fd_port, buffer, size_packet);
-    printf("----SIZE PACKET %d\n", size_packet);
-    printf("F NO CHAT\n");
+    packet_to_array(&start_packet, buffer);
+    n_chars_written = llwrite(application.fd_port, buffer, STR_SIZE);
     if (n_chars_written < 0) {
       perror("llwrite");
       return -1;
@@ -78,10 +76,9 @@ int main(int argc, char **argv) {
       // Send DATA packet
       data_packet.sequence_number = (data_packet.sequence_number + 1) % 256;
       sprintf(data_packet.data, "%s", fragment);
-      size_packet = packet_to_array(&data_packet, buffer);
-      free(buffer);
+      packet_to_array(&data_packet, buffer);
 
-      n_chars_written = llwrite(application.fd_port, buffer, size_packet);
+      n_chars_written = llwrite(application.fd_port, buffer, STR_SIZE);
       if (n_chars_written < 0) {
         perror("llwrite");
         return -1;
@@ -89,8 +86,8 @@ int main(int argc, char **argv) {
     }
 
     // Send END packet
-    size_packet = packet_to_array(&end_packet, buffer);
-    n_chars_written = llwrite(application.fd_port, buffer, size_packet);
+    packet_to_array(&end_packet, buffer);
+    n_chars_written = llwrite(application.fd_port, buffer, STR_SIZE);
     free(buffer);
     if (n_chars_written < 0) {
       perror("llwrite");
@@ -103,6 +100,8 @@ int main(int argc, char **argv) {
     // RECEIVER
 
     // Fragments of file to read
+    ctrl_packet start_packet, end_packet;
+    data_packet data_packet;
     unsigned char read_buffer[STR_SIZE];
     int n_chars_read;
 

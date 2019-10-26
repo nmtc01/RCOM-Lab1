@@ -28,5 +28,5 @@ typedef struct ctrl_packet {
 } ctrl_packet;
 
 void make_packets(int fd_file, ctrl_packet* start_packet, ctrl_packet* end_packet, data_packet* data_packet);
-int packet_to_array(void* packet_void_ptr, char* buffer);
+void packet_to_array(void* packet_void_ptr, char* buffer);
 void array_to_packet(void *packet_void_ptr, char *buffer);
