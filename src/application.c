@@ -73,7 +73,7 @@ int main(int argc, char **argv) {
         return -1;
       }
 
-      // Send DATA packet
+      // Send DATA packets
       data_packet.sequence_number = (data_packet.sequence_number + 1) % 256;
       sprintf(data_packet.data, "%s", fragment);
       packet_to_array(&data_packet, buffer);
@@ -84,6 +84,7 @@ int main(int argc, char **argv) {
         return -1;
       }
     }
+    close(fd_file);
 
     // Send END packet
     packet_to_array(&end_packet, buffer);
@@ -105,15 +106,17 @@ int main(int argc, char **argv) {
     unsigned char read_buffer[STR_SIZE];
     int n_chars_read;
 
-    // Read start packet
+    // Read START packet
     n_chars_read = llread(application.fd_port, read_buffer);
     if (n_chars_read < 0) {
       perror("llread");
       return -1;
     }
+    array_to_packet(&start_packet, read_buffer);
+
 
     // Create file
-    int fd_file = open(FILE_TO_SEND, O_WRONLY | O_CREAT);
+    int fd_file = open(start_packet.name.value, O_WRONLY | O_CREAT);
     if (fd_file < 0) {
       perror("Opening File");
       return -1;
@@ -128,7 +131,15 @@ int main(int argc, char **argv) {
         perror("llread");
         return -1;
       }
+
+      if(read_buffer[0] == 1){
+        array_to_packet(&data_packet, read_buffer);
+        write(fd_file, data_packet.data, FRAG_SIZE);
+      }else{
+        array_to_packet(&end_packet, read_buffer);
+      }
     }
+    close(fd_file);
   }
 
   // Finish communication
