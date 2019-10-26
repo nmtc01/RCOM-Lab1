@@ -61,7 +61,9 @@ int main(int argc, char **argv) {
     // Send START packet
     size_packet = packet_to_array(&start_packet, buffer);
     n_chars_written = llwrite(application.fd_port, buffer, size_packet);
+    printf("\n SIZE PACKET %d\n", size_packet);
     free(buffer);
+    printf("F NO CHAT\n");
     if (n_chars_written < 0) {
       perror("llwrite");
       return -1;
