@@ -135,8 +135,10 @@ int main(int argc, char **argv) {
       if(read_buffer[0] == 1){
         array_to_packet(&data_packet, read_buffer);
         write(fd_file, data_packet.data, FRAG_SIZE);
-      }else{
+      }
+      else {
         array_to_packet(&end_packet, read_buffer);
+        break;
       }
     }
     
