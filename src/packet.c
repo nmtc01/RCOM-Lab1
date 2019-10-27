@@ -78,8 +78,6 @@ void packet_to_array(void *packet_void_ptr, char *buffer) {
 void array_to_packet(void *packet_void_ptr, char *buffer) {
   data_packet *data_packet_ptr = (data_packet *)packet_void_ptr;
   ctrl_packet *ctrl_packet_ptr = (ctrl_packet *)packet_void_ptr;
-
-  data_packet_ptr->data = malloc(FRAG_SIZE+data_packet_ptr->nr_bytes1);
   
   switch (buffer[0]) {
   // DATA
@@ -88,6 +86,7 @@ void array_to_packet(void *packet_void_ptr, char *buffer) {
     data_packet_ptr->sequence_number = buffer[1];
     data_packet_ptr->nr_bytes2 = buffer[2];
     data_packet_ptr->nr_bytes1 = buffer[3];
+    data_packet_ptr->data = malloc(FRAG_SIZE+data_packet_ptr->nr_bytes1);
     strcpy(data_packet_ptr->data, (buffer + 4));
     
     break;
