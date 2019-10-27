@@ -107,8 +107,9 @@ void array_to_packet(void *packet_void_ptr, char *buffer) {
       message("Failed to allocate space. NAME VALUE");
       exit(3);
     }
+    printf("name = %s\n",buffer + 5 + buffer[2]);
     
-    strcpy(ctrl_packet_ptr->size.value, (buffer + 5 + buffer[2]));
+    strcpy(ctrl_packet_ptr->name.value, (buffer + 5 + buffer[2]));
     break;
   // END
   case 3:
@@ -129,7 +130,7 @@ void array_to_packet(void *packet_void_ptr, char *buffer) {
       message("Failed to allocate space. SIZE VALUE");
       exit(3);
     }
-    strcpy(ctrl_packet_ptr->size.value, (buffer + 5 + buffer[2]));
+    strcpy(ctrl_packet_ptr->name.value, (buffer + 5 + buffer[2]));
     break;
   default:
     break;
