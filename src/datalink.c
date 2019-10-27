@@ -557,7 +557,7 @@ int sendITramas(int fd, char *buffer, int length) {
     return res_i;
 }
 
-int receiveITramas(int fd, char *buffer) {
+int receiveITramas(int fd, unsigned char *buffer) {
     //Read trama I
     message("Reading Trama I");
     int data_bytes = read_i(fd, buffer);
@@ -758,7 +758,18 @@ int read_i(int fd, char *buffer) {
         }
     }
 
-    strcpy(buffer, data);
+    message("Read I");
+    for (int i = 0; i < data_bytes-1; i++) {
+        printf("%02x", data[i]);
+    }
+    printf("%02x - %d data bytes read\n", data[data_bytes-1], data_bytes);
+
+    strncpy(buffer, data, STR_SIZE);
+
+    for (int i = 0; i < data_bytes-1; i++) {
+        printf("%02x", buffer[i]);
+    }
+    printf("%02x - %d data bytes read\n", buffer[data_bytes-1], data_bytes);
 
     /*for (int i = 0; i < n_bytes-1; i++) {
         printf("%02x", trama[i]);

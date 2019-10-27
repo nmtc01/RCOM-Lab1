@@ -78,7 +78,7 @@ void timeout_handler();
 int sendStablishTramas(int fd, int status);
 int sendDiscTramas(int fd, int status);
 int sendITramas(int fd, char *buffer, int length);
-int receiveITramas(int fd, char *buffer);
+int receiveITramas(int fd, unsigned char *buffer);
 
 int write_set(int fd);
 void read_ua(int fd, int status);

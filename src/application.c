@@ -97,7 +97,8 @@ int main(int argc, char **argv) {
 
     free(data_packet.data);
 
-  } else {
+  } 
+  else {
     // RECEIVER
 
     // Fragments of file to read
