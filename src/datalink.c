@@ -801,8 +801,10 @@ void read_rr(int fd) {
     break_read_loop = 0;
 
     while (!break_read_loop) {
-        res = read(fd, read_char, sizeof(char));
-        rr[n_bytes] = read_char[0];
+        if (receiving_rr_state != FINISH_I) {
+            res = read(fd, read_char, sizeof(char));
+            rr[n_bytes] = read_char[0];
+        }
 
         switch (receiving_rr_state) {
             case START: {
