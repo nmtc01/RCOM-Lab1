@@ -770,16 +770,16 @@ int read_i(int fd, char *buffer, int *reject) {
     }
 
     //New trama
-    if (nr_tramaI == data[1]) {
+    if (nr_tramaI == data[1] || (!control_start && data[1] == '\0')) {
         //bcc2 wrong, then reject
-        if (*reject) 
+        if (*reject)  
             return REJECT_DATA;
+
         //bcc good, then accept
         memcpy(buffer, data, STR_SIZE);
-        if (!control_start) {
+        if (!control_start) 
             nr_tramaI = (nr_tramaI + 1) % 256;
-            control_start = 0;
-        }
+        control_start = 0;
     }
     else { //Duplicated trama, then send rr
         *reject = 0;
