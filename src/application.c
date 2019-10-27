@@ -106,6 +106,7 @@ int main(int argc, char **argv) {
     data_packet data_packet;
     unsigned char read_buffer[STR_SIZE];
     int n_chars_read;
+    data_packet.data = malloc(FRAG_SIZE+data_packet.nr_bytes1);
 
     // Receive information
     message("Started llread");
@@ -119,7 +120,6 @@ int main(int argc, char **argv) {
     array_to_packet(&start_packet, read_buffer);
 
     // Create file
-    printf("file name = %02x\n", start_packet.name.value);
     int fd_file = open(start_packet.name.value, O_WRONLY | O_CREAT | O_APPEND, 0664);
     if (fd_file < 0) {
       perror("Opening File");
@@ -132,7 +132,7 @@ int main(int argc, char **argv) {
         perror("llread");
         return -1;
       }
-
+      
       if(read_buffer[0] == 1){
         array_to_packet(&data_packet, read_buffer);
         write(fd_file, data_packet.data, FRAG_SIZE);
@@ -140,6 +140,7 @@ int main(int argc, char **argv) {
         array_to_packet(&end_packet, read_buffer);
       }
     }
+    
     close(fd_file);
   }
 
