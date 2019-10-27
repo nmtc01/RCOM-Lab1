@@ -119,6 +119,7 @@ int main(int argc, char **argv) {
     array_to_packet(&start_packet, read_buffer);
 
     // Create file
+    printf("file name = %02x\n", start_packet.name.value);
     int fd_file = open(start_packet.name.value, O_WRONLY | O_CREAT | O_APPEND, 0664);
     if (fd_file < 0) {
       perror("Opening File");
