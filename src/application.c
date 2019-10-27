@@ -111,6 +111,7 @@ int main(int argc, char **argv) {
     message("Started llread");
 
     // Read START packet
+    printf("read start packet\n");
     n_chars_read = llread(application.fd_port, read_buffer);
     if (n_chars_read < 0) {
       perror("llread");
@@ -119,7 +120,7 @@ int main(int argc, char **argv) {
     array_to_packet(&start_packet, read_buffer);
 
     // Create file
-    int fd_file = open(start_packet.name.value, O_WRONLY | O_CREAT | O_APPEND, 0664);
+    int fd_file = open(start_packet.name.value, O_WRONLY | O_CREAT | O_TRUNC | O_APPEND, 0664);
     if (fd_file < 0) {
       perror("Opening File");
       return -1;
