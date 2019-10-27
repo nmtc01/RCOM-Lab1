@@ -11,7 +11,7 @@ void make_packets(int fd_file, ctrl_packet *start_packet, ctrl_packet *end_packe
   start_packet->size.type = 0;
   start_packet->size.length = sizeof(int) / sizeof(char);
   start_packet->size.value = malloc(start_packet->size.length);
-  sprintf(start_packet->size.value, "%d", file_stat.st_size);
+  sprintf(start_packet->size.value, "%ld", file_stat.st_size);
 
   start_packet->name.type = 1;
   start_packet->name.length = sizeof(char) * strlen(basename(FILE_TO_SEND));
@@ -28,7 +28,7 @@ void make_packets(int fd_file, ctrl_packet *start_packet, ctrl_packet *end_packe
   end_packet->size.type = 0;
   end_packet->size.length = sizeof(int) / sizeof(char);
   end_packet->size.value = malloc(end_packet->size.length);
-  sprintf(end_packet->size.value, "%d", file_stat.st_size);
+  sprintf(end_packet->size.value, "%ld", file_stat.st_size);
 
   end_packet->name.type = 1;
   end_packet->name.length = sizeof(char) * strlen(basename(FILE_TO_SEND));
@@ -78,6 +78,7 @@ void packet_to_array(void *packet_void_ptr, char *buffer) {
 void array_to_packet(void *packet_void_ptr, char *buffer) {
   data_packet *data_packet_ptr = (data_packet *)packet_void_ptr;
   ctrl_packet *ctrl_packet_ptr = (ctrl_packet *)packet_void_ptr;
+  
   switch (buffer[0]) {
   // DATA
   case 1:
@@ -106,6 +107,7 @@ void array_to_packet(void *packet_void_ptr, char *buffer) {
       message("Failed to allocate space. NAME VALUE");
       exit(3);
     }
+    
     strcpy(ctrl_packet_ptr->size.value, (buffer + 5 + buffer[2]));
     break;
   // END

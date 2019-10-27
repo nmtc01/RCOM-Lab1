@@ -561,7 +561,7 @@ int receiveITramas(int fd, char *buffer) {
     //Read trama I
     message("Reading Trama I");
     int data_bytes = read_i(fd, buffer);
-
+    
     //Write trama RR
     message("Writting Trama RR");
     int res_rr = write_rr(fd);
@@ -633,8 +633,8 @@ int write_i(int fd, char *buffer, int length) {
 }
 
 int read_i(int fd, char *buffer) {
-    unsigned char trama[STR_SIZE] = {};
-    unsigned char data[STR_SIZE] = {};
+    unsigned char trama[STR_SIZE+2] = {};
+    unsigned char data[STR_SIZE+2] = {};
     int res;
     int n_bytes = 0;
     int data_bytes = 0;

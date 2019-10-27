@@ -14,15 +14,14 @@ typedef struct data_packet {
 
 typedef struct tlv_packet {
     char type;    /* type 0 - size of file
-                                            1 - name of file
-                                          ... - to be defined */
+                     type 1 - name of file */
     char length;  // size of value
     char* value;  // value
 } tlv_packet;
 
 typedef struct ctrl_packet {
     char control;     /* 2 - start
-                                               3 - end   */
+                         3 - end   */
     tlv_packet size;  // size of file
     tlv_packet name;  // name of file
 } ctrl_packet;
