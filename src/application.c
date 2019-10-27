@@ -106,7 +106,6 @@ int main(int argc, char **argv) {
     data_packet data_packet;
     unsigned char read_buffer[STR_SIZE];
     int n_chars_read;
-    data_packet.data = malloc(FRAG_SIZE+data_packet.nr_bytes1);
 
     // Receive information
     message("Started llread");
