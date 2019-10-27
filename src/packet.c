@@ -69,6 +69,7 @@ void packet_to_array(void *packet_void_ptr, unsigned char *buffer) {
     buffer[3 + ctrl_packet_ptr->size.length] = ctrl_packet_ptr->name.type;
     buffer[4 + ctrl_packet_ptr->size.length] = ctrl_packet_ptr->name.length;
     strcpy((buffer + 5 + ctrl_packet_ptr->size.length), ctrl_packet_ptr->name.value);
+    
     break;
 
   default:

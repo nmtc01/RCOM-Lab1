@@ -87,6 +87,9 @@ int main(int argc, char **argv) {
     close(fd_file);
 
     // Send END packet
+    for (int i = 0; i < FRAG_SIZE; i++) {
+      buffer[i] = '\0';
+    }
     packet_to_array(&end_packet, buffer);
     n_chars_written = llwrite(application.fd_port, buffer, STR_SIZE);
     free(buffer);
