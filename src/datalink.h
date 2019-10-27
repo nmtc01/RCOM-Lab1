@@ -36,6 +36,8 @@
 #define C_1 0x40
 #define C_RR0 0x05
 #define C_RR1 0x85
+#define C_REJ0 0x01
+#define C_REJ1 0x81
 #define ESCAPE 0x7D
 #define STUF 0x20
 
@@ -87,6 +89,7 @@ int write_ua(int fd, int status);
 int write_disc(int fd, int status);
 void read_disc(int fd, int status);
 int write_i(int fd, char *buffer, int length);
-int read_i(int fd, char *buffer);
+int read_i(int fd, char *buffer, int *reject);
 int write_rr(int fd);
-void read_rr(int fd);
+int read_rr(int fd);
+int write_rej(int fd);

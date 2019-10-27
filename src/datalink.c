@@ -16,6 +16,7 @@ volatile sig_atomic_t received_i = 0;
 volatile sig_atomic_t n_timeouts = 0;
 volatile sig_atomic_t break_read_loop = 0;
 volatile sig_atomic_t timed_out = 0;
+volatile sig_atomic_t nr_tramaI = 0;
 struct termios oldtio;
 struct termios newtio;
 enum state receiving_ua_state;
@@ -539,13 +540,15 @@ int sendITramas(int fd, char *buffer, int length) {
 
             //Read trama RR
             message("Reading Trama RR");
-            read_rr(fd);
+            int rej = read_rr(fd);
             alarm(0);
 
+            if (!rej) {
             //Change sequence number
-            if (!timed_out)
-                datalink.sequenceNumber = (datalink.sequenceNumber + 1) % 2;
-            timed_out = 0;
+                if (!timed_out)
+                    datalink.sequenceNumber = (datalink.sequenceNumber + 1) % 2;
+                timed_out = 0;
+            }
         } else
             break;
     }
@@ -560,16 +563,23 @@ int sendITramas(int fd, char *buffer, int length) {
 int receiveITramas(int fd, unsigned char *buffer) {
     //Read trama I
     message("Reading Trama I");
-    int data_bytes = read_i(fd, buffer);
-    
-    //Write trama RR
-    message("Writting Trama RR");
-    int res_rr = write_rr(fd);
+    int reject = 0;
+    int data_bytes = read_i(fd, buffer, &reject);
+    if (data_bytes == 0 && reject) {
+        //Write trama REJ
+        message("Writting Trama REJ");
+        int res_rej = write_rej(fd);
+    }
+    else {
+        //Write trama RR
+        message("Writting Trama RR");
+        int res_rr = write_rr(fd);
 
-    //Change sequence number
-    if (!timed_out)
-        datalink.sequenceNumber = (datalink.sequenceNumber + 1) % 2;
-    timed_out = 0;
+        //Change sequence number
+        if (!timed_out)
+            datalink.sequenceNumber = (datalink.sequenceNumber + 1) % 2;
+        timed_out = 0;
+    }
 
     return data_bytes;
 }
@@ -632,7 +642,7 @@ int write_i(int fd, char *buffer, int length) {
     return length;
 }
 
-int read_i(int fd, char *buffer) {
+int read_i(int fd, char *buffer, int *reject) {
     unsigned char trama[STR_SIZE+2] = {};
     unsigned char data[STR_SIZE+2] = {};
     int res;
@@ -738,6 +748,7 @@ int read_i(int fd, char *buffer) {
                     receiving_data_state = FINISH_I;
                 } else {
                     receiving_data_state = FINISH_I;
+                    *reject = 1; //possibility of sending rej message
                     data_bytes = 0;
                 }
                 break;
@@ -758,7 +769,19 @@ int read_i(int fd, char *buffer) {
         }
     }
 
-    memcpy(buffer, data, STR_SIZE);
+    //New trama
+    if (nr_tramaI == data[1]) {
+        //bcc2 wrong, then reject
+        if (*reject) 
+            return 0;
+        //bcc good, then accept
+        memcpy(buffer, data, STR_SIZE);
+        nr_tramaI = (nr_tramaI + 1) % 256;
+    }
+    else { //Duplicated trama, then send rr
+        *reject = 0;
+        data_bytes = 0;
+    }
 
     /*for (int i = 0; i < n_bytes-1; i++) {
         printf("%02x", trama[i]);
@@ -789,11 +812,12 @@ int write_rr(int fd) {
     return res;
 }
 
-void read_rr(int fd) {
+int read_rr(int fd) {
     unsigned char rr[STR_SIZE];
     memset(rr, '\0', STR_SIZE);
-    u_int8_t c_rr;
+    u_int8_t c_rr, c_rej;
     int res;
+    int rej = 0;
     int n_bytes = 0;
     unsigned char read_char[1];
 
@@ -828,13 +852,20 @@ void read_rr(int fd) {
                 break;
             }
             case A_RCV: {
-                if (datalink.sequenceNumber)
+                if (datalink.sequenceNumber) {
                     c_rr = C_RR0;
-                else
+                    c_rej = C_REJ1;
+                }
+                else {
                     c_rr = C_RR1;
-
+                    c_rej = C_REJ0;
+                }
                 if (read_char[0] == c_rr) {
                     receiving_rr_state = C_RCV;
+                    n_bytes++;
+                } else if (read_char[0] == c_rej) {
+                    receiving_rr_state = C_RCV;
+                    rej = 1;
                     n_bytes++;
                 } else if (read_char[0] == FLAG) {
                     receiving_rr_state = FLAG_RCV;
@@ -846,7 +877,7 @@ void read_rr(int fd) {
                 break;
             }
             case C_RCV: {
-                if (read_char[0] == A_CMD ^ c_rr) {
+                if ((read_char[0] == A_CMD ^ c_rr) || (read_char[0] == A_CMD ^ c_rej)) {
                     receiving_rr_state = BCC_OK;
                     n_bytes++;
                 } else if (read_char[0] == FLAG) {
@@ -877,4 +908,28 @@ void read_rr(int fd) {
     }
 
     printf("%02x%02x%02x%02x%02x - %d bytes read\n", rr[0], rr[1], rr[2], rr[3], rr[4], n_bytes);
+
+    return rej;
 }
+
+int write_rej(int fd) {
+    //Create trama rej
+    unsigned char rej[5];
+    rej[0] = FLAG;
+    rej[1] = A_CMD;
+    if (datalink.sequenceNumber)
+        rej[2] = C_REJ1;
+    else
+        rej[2] = C_REJ0;
+    if (datalink.sequenceNumber)
+        rej[3] = A_CMD ^ C_REJ1;
+    else
+        rej[3] = A_CMD ^ C_REJ0;
+    rej[4] = FLAG;
+
+    int res = write(fd, rej, 5 * sizeof(char));
+    printf("%02x%02x%02x%02x%02x - %d bytes written\n", rej[0], rej[1], rej[2], rej[3], rej[4], res);
+
+    return res;
+}
+
