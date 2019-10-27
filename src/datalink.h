@@ -40,6 +40,7 @@
 #define C_REJ1 0x81
 #define ESCAPE 0x7D
 #define STUF 0x20
+#define REJECT_DATA 1
 
 enum state {
     START,

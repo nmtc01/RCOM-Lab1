@@ -17,6 +17,7 @@ volatile sig_atomic_t n_timeouts = 0;
 volatile sig_atomic_t break_read_loop = 0;
 volatile sig_atomic_t timed_out = 0;
 volatile sig_atomic_t nr_tramaI = 0;
+volatile sig_atomic_t control_start = 1;
 struct termios oldtio;
 struct termios newtio;
 enum state receiving_ua_state;
@@ -565,7 +566,7 @@ int receiveITramas(int fd, unsigned char *buffer) {
     message("Reading Trama I");
     int reject = 0;
     int data_bytes = read_i(fd, buffer, &reject);
-    if (data_bytes == 0 && reject) {
+    if (reject) {
         //Write trama REJ
         message("Writting Trama REJ");
         int res_rej = write_rej(fd);
@@ -626,8 +627,7 @@ int write_i(int fd, char *buffer, int length) {
             stuf = (char *)realloc(stuf, nr_bytes);
             stuf[j + new_bytes - 1] = ESCAPE;
             stuf[j + new_bytes] = ESCAPE ^ STUF;
-        } else
-            stuf[j + new_bytes] = trama[j];
+        } else stuf[j + new_bytes] = trama[j];
     }
     stuf[nr_bytes - 1] = FLAG;
 
@@ -749,7 +749,7 @@ int read_i(int fd, char *buffer, int *reject) {
                 } else {
                     receiving_data_state = FINISH_I;
                     *reject = 1; //possibility of sending rej message
-                    data_bytes = 0;
+                    data_bytes = REJECT_DATA;
                 }
                 break;
             }
@@ -773,14 +773,17 @@ int read_i(int fd, char *buffer, int *reject) {
     if (nr_tramaI == data[1]) {
         //bcc2 wrong, then reject
         if (*reject) 
-            return 0;
+            return REJECT_DATA;
         //bcc good, then accept
         memcpy(buffer, data, STR_SIZE);
-        nr_tramaI = (nr_tramaI + 1) % 256;
+        if (!control_start) {
+            nr_tramaI = (nr_tramaI + 1) % 256;
+            control_start = 0;
+        }
     }
     else { //Duplicated trama, then send rr
         *reject = 0;
-        data_bytes = 0;
+        data_bytes = REJECT_DATA;
     }
 
     /*for (int i = 0; i < n_bytes-1; i++) {

@@ -114,7 +114,6 @@ int main(int argc, char **argv) {
     message("Started llread");
 
     // Read START packet
-    printf("read start packet\n");
     n_chars_read = llread(application.fd_port, read_buffer);
     if (n_chars_read < 0) {
       perror("llread");
