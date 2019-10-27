@@ -9,7 +9,7 @@ typedef struct data_packet {
     char sequence_number;  // number of data_packet
     char nr_bytes2;
     char nr_bytes1;  // K = 256 * nr_bytes2 + nr_bytes1
-    char* data;      // data with K bytes
+    unsigned char* data;      // data with K bytes
 } data_packet;
 
 typedef struct tlv_packet {
@@ -27,5 +27,5 @@ typedef struct ctrl_packet {
 } ctrl_packet;
 
 void make_packets(int fd_file, ctrl_packet* start_packet, ctrl_packet* end_packet, data_packet* data_packet);
-void packet_to_array(void* packet_void_ptr, char* buffer);
+void packet_to_array(void* packet_void_ptr, unsigned char* buffer);
 void array_to_packet(void *packet_void_ptr, char *buffer);

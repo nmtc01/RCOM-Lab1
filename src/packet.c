@@ -22,7 +22,7 @@ void make_packets(int fd_file, ctrl_packet *start_packet, ctrl_packet *end_packe
   data_packet->sequence_number = 255;
   data_packet->nr_bytes2 = FRAG_SIZE / 256;
   data_packet->nr_bytes1 = FRAG_SIZE % 256;
-  data_packet->data = malloc(FRAG_SIZE);
+  data_packet->data = malloc(FRAG_SIZE+data_packet->nr_bytes1);
 
   end_packet->control = 3;
   end_packet->size.type = 0;
@@ -36,7 +36,7 @@ void make_packets(int fd_file, ctrl_packet *start_packet, ctrl_packet *end_packe
   sprintf(end_packet->name.value, "%s", basename(FILE_TO_SEND));
 }
 
-void packet_to_array(void *packet_void_ptr, char *buffer) {
+void packet_to_array(void *packet_void_ptr, unsigned char *buffer) {
   data_packet *data_packet_ptr = (data_packet *)packet_void_ptr;
   ctrl_packet *ctrl_packet_ptr = (ctrl_packet *)packet_void_ptr;
 
@@ -47,7 +47,8 @@ void packet_to_array(void *packet_void_ptr, char *buffer) {
     buffer[1] = data_packet_ptr->sequence_number;
     buffer[2] = data_packet_ptr->nr_bytes2;
     buffer[3] = data_packet_ptr->nr_bytes1;
-    strcpy((buffer + 4), data_packet_ptr->data);
+    memcpy((buffer + 4), data_packet_ptr->data, FRAG_SIZE+data_packet_ptr->nr_bytes1);
+
     break;
   // START PACKET
   case 2:
@@ -87,7 +88,7 @@ void array_to_packet(void *packet_void_ptr, char *buffer) {
     data_packet_ptr->nr_bytes2 = buffer[2];
     data_packet_ptr->nr_bytes1 = buffer[3];
     data_packet_ptr->data = malloc(FRAG_SIZE+data_packet_ptr->nr_bytes1);
-    strcpy(data_packet_ptr->data, (buffer + 4));
+    memcpy(data_packet_ptr->data, (buffer + 4), FRAG_SIZE+data_packet_ptr->nr_bytes1);
     
     break;
   // START

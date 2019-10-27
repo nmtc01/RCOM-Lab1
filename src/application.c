@@ -51,8 +51,8 @@ int main(int argc, char **argv) {
     make_packets(fd_file, &start_packet, &end_packet, &data_packet);
 
     // Fragments of file to send
-    char fragment[FRAG_SIZE];
-    char *buffer = malloc(STR_SIZE);
+    unsigned char fragment[FRAG_SIZE];
+    unsigned char *buffer = malloc(STR_SIZE);
     int numbytes, size_packet, n_chars_written;
 
     // Write information
@@ -75,7 +75,7 @@ int main(int argc, char **argv) {
 
       // Send DATA packets
       data_packet.sequence_number = (data_packet.sequence_number + 1) % 256;
-      sprintf(data_packet.data, "%s", fragment);
+      memcpy(data_packet.data, fragment, FRAG_SIZE);
       packet_to_array(&data_packet, buffer);
 
       n_chars_written = llwrite(application.fd_port, buffer, STR_SIZE);
