@@ -676,8 +676,8 @@ int write_i(int fd, char *buffer, int length) {
 }
 
 int read_i(int fd, char *buffer, int *reject) {
-    unsigned char trama[STR_SIZE+2] = {};
-    unsigned char data[STR_SIZE+2] = {};
+    unsigned char trama[STR_SIZE] = {};
+    unsigned char data[STR_SIZE] = {};
     int res;
     int n_bytes = 0;
     int data_bytes = 0;
@@ -734,7 +734,7 @@ int read_i(int fd, char *buffer, int *reject) {
                 break;
             }
             case C_RCV_I: {
-                if (read_char[0] == A_CMD ^ C_0 || read_char[0] == A_CMD ^ C_1) {
+                if (read_char[0] == (A_CMD ^ C_0) || read_char[0] == (A_CMD ^ C_1)) {
                     receiving_data_state = BCC1_OK_I;
                     n_bytes++;
                 } else if (read_char[0] == FLAG) {
@@ -765,6 +765,7 @@ int read_i(int fd, char *buffer, int *reject) {
                 } else if (read_char[0] == ESCAPE) {
                     receiving_data_state = ESCAPE_RCV_I;
                 } else {
+                    if(trama[n_bytes+1] == FLAG) break;
                     data[data_bytes] = trama[n_bytes];
                     n_bytes++;
                     data_bytes++;

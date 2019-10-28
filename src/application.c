@@ -51,56 +51,42 @@ int main(int argc, char **argv) {
     make_packets(fd_file, &start_packet, &end_packet, &data_packet);
 
     // Fragments of file to send
-    unsigned char *fragment = malloc(FRAG_SIZE);
-    unsigned char buffer[800];
+    unsigned char fragment[FRAG_SIZE];
+    unsigned char buffer[STR_SIZE];
     int numbytes, size_packet, n_chars_written;
 
     // Write information
     message("Started llwrite");
 
     // Send START packet
-    memset(buffer, '\0', 5 + start_packet.size.length + start_packet.name.length);
+    memset(buffer, '\0', STR_SIZE);
     packet_to_array(&start_packet, buffer);
-    n_chars_written = llwrite(application.fd_port, buffer, 5 + start_packet.size.length + start_packet.name.length);
-    if (n_chars_written < 0) {
-      perror("llwrite");
-      return -1;
-    }
-		printf("\nFFFF\n");
+    n_chars_written = llwrite(application.fd_port, buffer, START_SIZE);
+    LTZ_RET(n_chars_written)
+
 
     // Read fragments and send them one by one
+    memset(buffer, '\0', STR_SIZE);
     while ((numbytes = read(fd_file, fragment, FRAG_SIZE)) != 0) {
-      if (numbytes < 0) {
-        perror("readFile");
-        return -1;
-      }
-		printf("\nFFFF\n");
+      LTZ_RET(numbytes)
+
       // Send DATA packets
       data_packet.sequence_number = (data_packet.sequence_number + 1) % 256;
+      data_packet.nr_bytes2 = numbytes/256;
+      data_packet.nr_bytes1 = numbytes%256;
       memcpy(data_packet.data, fragment, numbytes);
-		printf("\nFFFF\n");
-
-
-      memset(buffer, '\0', 4 + data_packet.nr_bytes2*256 + data_packet.nr_bytes1 + 2);
       packet_to_array(&data_packet, buffer);
-		printf("\nFFFF\n");
 
-      n_chars_written = llwrite(application.fd_port, buffer, 4 + data_packet.nr_bytes2*256 + data_packet.nr_bytes1 + 2);
-      if (n_chars_written < 0) {
-        perror("llwrite");
-        return -1;
-      }		printf("\nFFFF\n");
+      n_chars_written = llwrite(application.fd_port, buffer, DATA_SIZE);
+      LTZ_RET(n_chars_written)
+      memset(buffer, '\0', STR_SIZE);
     }
     close(fd_file);
 
     // Send END packet
-    memset(buffer, '\0', 5 + end_packet.size.length + end_packet.name.length);
     packet_to_array(&end_packet, buffer);
-    n_chars_written = llwrite(application.fd_port, buffer, 5 + end_packet.size.length + end_packet.name.length);
-    if (n_chars_written < 0) {
-      perror("llwrite");
-      return -1;
-    }
+    n_chars_written = llwrite(application.fd_port, buffer, END_SIZE);
+    LTZ_RET(n_chars_written)
   }
   else {
     // RECEIVER
@@ -108,49 +94,36 @@ int main(int argc, char **argv) {
     // Fragments of file to read
     ctrl_packet start_packet, end_packet;
     data_packet data_packet;
-    unsigned char read_buffer[255];
+    unsigned char read_buffer[STR_SIZE];
     int n_chars_read;
 
     // Receive information
     message("Started llread");
 
     // Read START packet
-    memset(read_buffer, '\0', 255);
+    memset(read_buffer, '\0', STR_SIZE);
     n_chars_read = llread(application.fd_port, read_buffer);
-    if (n_chars_read < 0) {
-      perror("llread");
-      return -1;
-    }
+    LTZ_RET(n_chars_read)
     array_to_packet(&start_packet, read_buffer);
 
     // Create file
-    printf("%s \n", start_packet.name.value);
-    for(int i=0; i < 100; i++){
-      printf("%02X", read_buffer[i]);
-    }
-    printf("\n");
     int fd_file = open(start_packet.name.value, O_WRONLY | O_CREAT | O_TRUNC |O_APPEND , 0664);
-    if (fd_file < 0) {
-      perror("Opening File");
-      return -1;
-    }
+    LTZ_RET(fd_file)
 
     // Read fragments
+    memset(read_buffer, '\0', STR_SIZE);
     while ((n_chars_read = llread(application.fd_port, read_buffer)) != 0) {
-      if (n_chars_read < 0) {
-        perror("llread");
-        return -1;
-      }
+      LTZ_RET(n_chars_read)
 
       if(read_buffer[0] == 1){
         array_to_packet(&data_packet, read_buffer);
         write(fd_file, data_packet.data, data_packet.nr_bytes2*256+data_packet.nr_bytes1);
-        free(data_packet.data);
       }
       else {
         array_to_packet(&end_packet, read_buffer);
         break;
       }
+      memset(read_buffer, '\0', STR_SIZE);
     }
 
     close(fd_file);

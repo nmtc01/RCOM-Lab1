@@ -8,6 +8,11 @@
 
 #include "packet.h"
 
+#define START_SIZE      (5 + start_packet.size.length + start_packet.name.length)
+#define END_SIZE        (5 + end_packet.size.length + end_packet.name.length)
+#define DATA_SIZE       (4 + data_packet.nr_bytes2*256 + data_packet.nr_bytes1)
+#define LTZ_RET(n)      if((n) < 0){ return -1;}
+
 //Application struct
 struct appLayer {
     int fd_port;

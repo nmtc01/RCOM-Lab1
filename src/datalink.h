@@ -18,7 +18,7 @@
 #include <unistd.h>
 
 #define BAUDRATE B38400
-#define STR_SIZE 255
+#define STR_SIZE 500
 #define FRAG_SIZE 255
 #define TRANSMITTER 12
 #define RECEIVER 21

@@ -7,6 +7,12 @@ void make_packets(int fd_file, ctrl_packet *start_packet, ctrl_packet *end_packe
     exit(2);
   }
 
+  data_packet->control = 1;
+  data_packet->sequence_number = (unsigned char)255;
+  data_packet->nr_bytes2 = (unsigned char)FRAG_SIZE / 256;
+  data_packet->nr_bytes1 = (unsigned char)FRAG_SIZE % 256;
+  data_packet->data = malloc(data_packet->nr_bytes2*256 + data_packet->nr_bytes1+2);
+  
   start_packet->control = 2;
   start_packet->size.type = 0;
   start_packet->size.length = sizeof(int);
@@ -17,12 +23,6 @@ void make_packets(int fd_file, ctrl_packet *start_packet, ctrl_packet *end_packe
   start_packet->name.length = strlen(basename(FILE_TO_SEND));
   start_packet->name.value = malloc(start_packet->name.length);
   sprintf(start_packet->name.value, "%s", basename(FILE_TO_SEND));
-
-  data_packet->control = 1;
-  data_packet->sequence_number = 255;
-  data_packet->nr_bytes2 = FRAG_SIZE / 256;
-  data_packet->nr_bytes1 = FRAG_SIZE % 256;
-  data_packet->data = malloc(data_packet->nr_bytes2*256 + data_packet->nr_bytes1+2);
 
   end_packet->control = 3;
   end_packet->size.type = 0;
@@ -36,7 +36,7 @@ void make_packets(int fd_file, ctrl_packet *start_packet, ctrl_packet *end_packe
   sprintf(end_packet->name.value, "%s", basename(FILE_TO_SEND));
 }
 
-void packet_to_array(void *packet_void_ptr, unsigned char *buffer) {
+void packet_to_array(void *packet_void_ptr, char *buffer) {
   data_packet *data_packet_ptr = (data_packet *)packet_void_ptr;
   ctrl_packet *ctrl_packet_ptr = (ctrl_packet *)packet_void_ptr;
 
@@ -88,7 +88,6 @@ void array_to_packet(void *packet_void_ptr, char *buffer) {
     data_packet_ptr->sequence_number = buffer[1];
     data_packet_ptr->nr_bytes2 = buffer[2];
     data_packet_ptr->nr_bytes1 = buffer[3];
-    data_packet_ptr->data = malloc(buffer[2]*256+buffer[3]+2);
     memcpy(data_packet_ptr->data, (buffer + 4), buffer[2]*256+buffer[3]+2);
 
     break;
@@ -97,26 +96,22 @@ void array_to_packet(void *packet_void_ptr, char *buffer) {
     ctrl_packet_ptr->control = buffer[0];
     ctrl_packet_ptr->size.type = buffer[1];
     ctrl_packet_ptr->size.length = buffer[2];
-    ctrl_packet_ptr->size.value = malloc(buffer[2]);
-    strcpy(ctrl_packet_ptr->size.value, (buffer + 3));
+    memcpy(ctrl_packet_ptr->size.value, (buffer + 3), buffer[2]);
 
     ctrl_packet_ptr->name.type = buffer[3 + buffer[2]];
     ctrl_packet_ptr->name.length = buffer[4 + buffer[2]];
-    ctrl_packet_ptr->name.value = malloc(buffer[4 + buffer[2]]);
-    strcpy(ctrl_packet_ptr->name.value, (buffer + 5 + buffer[2]));
+    memcpy(ctrl_packet_ptr->name.value, buffer + 5 + buffer[2], buffer[4 + buffer[2]]);
     break;
   // END
   case 3:
     ctrl_packet_ptr->control = buffer[0];
     ctrl_packet_ptr->size.type = buffer[1];
     ctrl_packet_ptr->size.length = buffer[2];
-    ctrl_packet_ptr->size.value = malloc(buffer[2]);
-    strcpy(ctrl_packet_ptr->size.value, (buffer + 3));
+    memcpy(ctrl_packet_ptr->size.value, (buffer + 3), buffer[2]);
 
     ctrl_packet_ptr->name.type = buffer[3 + buffer[2]];
     ctrl_packet_ptr->name.length = buffer[4 + buffer[2]];
-    ctrl_packet_ptr->name.value = malloc(buffer[4 + buffer[2]]);
-    strcpy(ctrl_packet_ptr->name.value, (buffer + 5 + buffer[2]));
+    memcpy(ctrl_packet_ptr->name.value, buffer + 5 + buffer[2], buffer[4 + buffer[2]]);
     break;
   default:
     break;
