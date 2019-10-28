@@ -1,6 +1,6 @@
 #include "packet.h"
 
-void make_packets(int fd_file, ctrl_packet *start_packet, ctrl_packet *end_packet, data_packet *data_packet) {
+void transmitter_packets(int fd_file, ctrl_packet *start_packet, ctrl_packet *end_packet, data_packet *data_packet) {
   struct stat file_stat;
   if (fstat(fd_file, &file_stat) < 0) {
     message("Error reading file. Exitting.");
@@ -12,7 +12,7 @@ void make_packets(int fd_file, ctrl_packet *start_packet, ctrl_packet *end_packe
   data_packet->nr_bytes2 = (unsigned char)FRAG_SIZE / 256;
   data_packet->nr_bytes1 = (unsigned char)FRAG_SIZE % 256;
   data_packet->data = malloc(data_packet->nr_bytes2*256 + data_packet->nr_bytes1+2);
-  
+
   start_packet->control = 2;
   start_packet->size.type = 0;
   start_packet->size.length = sizeof(int);
@@ -34,6 +34,28 @@ void make_packets(int fd_file, ctrl_packet *start_packet, ctrl_packet *end_packe
   end_packet->name.length = strlen(basename(FILE_TO_SEND));
   end_packet->name.value = malloc(end_packet->name.length);
   sprintf(end_packet->name.value, "%s", basename(FILE_TO_SEND));
+}
+
+void receiver_packets(ctrl_packet *start_packet, ctrl_packet *end_packet, data_packet *data_packet) {
+  data_packet->control = 1;
+  data_packet->sequence_number = (unsigned char)255;
+  data_packet->nr_bytes2 = (unsigned char)FRAG_SIZE / 256;
+  data_packet->nr_bytes1 = (unsigned char)FRAG_SIZE % 256;
+  data_packet->data = malloc(data_packet->nr_bytes2*256 + data_packet->nr_bytes1+2);
+
+  start_packet->control = 2;
+  start_packet->size.type = 0;
+  start_packet->size.length = 0;
+
+  start_packet->name.type = 1;
+  start_packet->name.length = 0;
+
+  end_packet->control = 3;
+  end_packet->size.type = 0;
+  end_packet->size.length = 0;
+
+  end_packet->name.type = 1;
+  end_packet->name.length = 0;
 }
 
 void packet_to_array(void *packet_void_ptr, char *buffer) {
@@ -89,17 +111,18 @@ void array_to_packet(void *packet_void_ptr, char *buffer) {
     data_packet_ptr->nr_bytes2 = buffer[2];
     data_packet_ptr->nr_bytes1 = buffer[3];
     memcpy(data_packet_ptr->data, (buffer + 4), buffer[2]*256+buffer[3]+2);
-
     break;
   // START
   case 2:
     ctrl_packet_ptr->control = buffer[0];
     ctrl_packet_ptr->size.type = buffer[1];
     ctrl_packet_ptr->size.length = buffer[2];
+    ctrl_packet_ptr->size.value = malloc(ctrl_packet_ptr->size.length);
     memcpy(ctrl_packet_ptr->size.value, (buffer + 3), buffer[2]);
-
+    
     ctrl_packet_ptr->name.type = buffer[3 + buffer[2]];
     ctrl_packet_ptr->name.length = buffer[4 + buffer[2]];
+    ctrl_packet_ptr->name.value = malloc(ctrl_packet_ptr->name.length);
     memcpy(ctrl_packet_ptr->name.value, buffer + 5 + buffer[2], buffer[4 + buffer[2]]);
     break;
   // END
@@ -107,10 +130,12 @@ void array_to_packet(void *packet_void_ptr, char *buffer) {
     ctrl_packet_ptr->control = buffer[0];
     ctrl_packet_ptr->size.type = buffer[1];
     ctrl_packet_ptr->size.length = buffer[2];
+    ctrl_packet_ptr->size.value = malloc(ctrl_packet_ptr->size.length);
     memcpy(ctrl_packet_ptr->size.value, (buffer + 3), buffer[2]);
 
     ctrl_packet_ptr->name.type = buffer[3 + buffer[2]];
     ctrl_packet_ptr->name.length = buffer[4 + buffer[2]];
+    ctrl_packet_ptr->name.value = malloc(ctrl_packet_ptr->name.length);
     memcpy(ctrl_packet_ptr->name.value, buffer + 5 + buffer[2], buffer[4 + buffer[2]]);
     break;
   default:

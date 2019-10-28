@@ -48,7 +48,7 @@ int main(int argc, char **argv) {
     // Create packets
     ctrl_packet start_packet, end_packet;
     data_packet data_packet;
-    make_packets(fd_file, &start_packet, &end_packet, &data_packet);
+    transmitter_packets(fd_file, &start_packet, &end_packet, &data_packet);
 
     // Fragments of file to send
     unsigned char fragment[FRAG_SIZE];
@@ -97,6 +97,8 @@ int main(int argc, char **argv) {
     unsigned char read_buffer[STR_SIZE];
     int n_chars_read;
 
+    receiver_packets(&start_packet, &end_packet, &data_packet);
+
     // Receive information
     message("Started llread");
 
@@ -105,7 +107,6 @@ int main(int argc, char **argv) {
     n_chars_read = llread(application.fd_port, read_buffer);
     LTZ_RET(n_chars_read)
     array_to_packet(&start_packet, read_buffer);
-
     // Create file
     int fd_file = open(start_packet.name.value, O_WRONLY | O_CREAT | O_TRUNC |O_APPEND , 0664);
     LTZ_RET(fd_file)

@@ -825,10 +825,6 @@ int read_i(int fd, char *buffer, int *reject) {
     }
     printf("%02x - %d data bytes read\n", trama[n_bytes-1], data_bytes);
 
-    for(int i = 0; i < 31; i++){
-        printf("%02x", buffer[i]);
-    }
-    printf("\n FFFIHJSUIHUIDS");
     return data_bytes;
 }
 
