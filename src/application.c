@@ -51,7 +51,7 @@ int main(int argc, char **argv) {
     make_packets(fd_file, &start_packet, &end_packet, &data_packet);
 
     // Fragments of file to send
-    unsigned char fragment[FRAG_SIZE];
+    unsigned char *fragment;
     unsigned char *buffer = malloc(STR_SIZE);
     int numbytes, size_packet, n_chars_written;
 
@@ -59,6 +59,7 @@ int main(int argc, char **argv) {
     message("Started llwrite");
 
     // Send START packet
+    buffer = realloc(buffer, 5 + start_packet.size.length + start_packet.name.length);
     packet_to_array(&start_packet, buffer);
     n_chars_written = llwrite(application.fd_port, buffer, STR_SIZE);
     if (n_chars_written < 0) {
@@ -75,7 +76,10 @@ int main(int argc, char **argv) {
 
       // Send DATA packets
       data_packet.sequence_number = (data_packet.sequence_number + 1) % 256;
-      memcpy(data_packet.data, fragment, FRAG_SIZE);
+      fragment = realloc(fragment, numbytes);
+      memcpy(data_packet.data, fragment, numbytes);
+
+      buffer = realloc(buffer, 5 + start_packet.size.length + start_packet.name.length);
       packet_to_array(&data_packet, buffer);
 
       n_chars_written = llwrite(application.fd_port, buffer, STR_SIZE);
@@ -100,7 +104,7 @@ int main(int argc, char **argv) {
 
     //free(data_packet.data);
 
-  } 
+  }
   else {
     // RECEIVER
 
@@ -134,7 +138,7 @@ int main(int argc, char **argv) {
         perror("llread");
         return -1;
       }
-      
+
       if(read_buffer[0] == 1){
         array_to_packet(&data_packet, read_buffer);
         write(fd_file, data_packet.data, FRAG_SIZE);
@@ -144,7 +148,7 @@ int main(int argc, char **argv) {
         break;
       }
     }
-    
+
     close(fd_file);
   }
 

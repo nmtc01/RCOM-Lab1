@@ -9,12 +9,12 @@ void make_packets(int fd_file, ctrl_packet *start_packet, ctrl_packet *end_packe
 
   start_packet->control = 2;
   start_packet->size.type = 0;
-  start_packet->size.length = sizeof(int) / sizeof(char);
+  start_packet->size.length = sizeof(int);
   start_packet->size.value = malloc(start_packet->size.length);
   sprintf(start_packet->size.value, "%ld", file_stat.st_size);
 
   start_packet->name.type = 1;
-  start_packet->name.length = sizeof(char) * strlen(basename(FILE_TO_SEND));
+  start_packet->name.length = strlen(basename(FILE_TO_SEND));
   start_packet->name.value = malloc(start_packet->name.length);
   sprintf(start_packet->name.value, "%s", basename(FILE_TO_SEND));
 
@@ -22,16 +22,16 @@ void make_packets(int fd_file, ctrl_packet *start_packet, ctrl_packet *end_packe
   data_packet->sequence_number = 255;
   data_packet->nr_bytes2 = FRAG_SIZE / 256;
   data_packet->nr_bytes1 = FRAG_SIZE % 256;
-  data_packet->data = malloc(FRAG_SIZE+data_packet->nr_bytes1);
+  data_packet->data = malloc(data_packet->nr_bytes2*256 + data_packet->nr_bytes1);
 
   end_packet->control = 3;
   end_packet->size.type = 0;
-  end_packet->size.length = sizeof(int) / sizeof(char);
+  end_packet->size.length = sizeof(int);
   end_packet->size.value = malloc(end_packet->size.length);
   sprintf(end_packet->size.value, "%ld", file_stat.st_size);
 
   end_packet->name.type = 1;
-  end_packet->name.length = sizeof(char) * strlen(basename(FILE_TO_SEND));
+  end_packet->name.length = strlen(basename(FILE_TO_SEND));
   end_packet->name.value = malloc(end_packet->name.length);
   sprintf(end_packet->name.value, "%s", basename(FILE_TO_SEND));
 }
@@ -69,7 +69,7 @@ void packet_to_array(void *packet_void_ptr, unsigned char *buffer) {
     buffer[3 + ctrl_packet_ptr->size.length] = ctrl_packet_ptr->name.type;
     buffer[4 + ctrl_packet_ptr->size.length] = ctrl_packet_ptr->name.length;
     strcpy((buffer + 5 + ctrl_packet_ptr->size.length), ctrl_packet_ptr->name.value);
-    
+
     break;
 
   default:
@@ -80,7 +80,7 @@ void packet_to_array(void *packet_void_ptr, unsigned char *buffer) {
 void array_to_packet(void *packet_void_ptr, char *buffer) {
   data_packet *data_packet_ptr = (data_packet *)packet_void_ptr;
   ctrl_packet *ctrl_packet_ptr = (ctrl_packet *)packet_void_ptr;
-  
+
   switch (buffer[0]) {
   // DATA
   case 1:
@@ -90,7 +90,7 @@ void array_to_packet(void *packet_void_ptr, char *buffer) {
     data_packet_ptr->nr_bytes1 = buffer[3];
     data_packet_ptr->data = malloc(FRAG_SIZE+data_packet_ptr->nr_bytes1);
     memcpy(data_packet_ptr->data, (buffer + 4), FRAG_SIZE+data_packet_ptr->nr_bytes1);
-    
+
     break;
   // START
   case 2:
@@ -111,7 +111,7 @@ void array_to_packet(void *packet_void_ptr, char *buffer) {
       message("Failed to allocate space. NAME VALUE");
       exit(3);
     }
-    
+
     strcpy(ctrl_packet_ptr->name.value, (buffer + 5 + buffer[2]));
     break;
   // END

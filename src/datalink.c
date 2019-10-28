@@ -649,10 +649,10 @@ int write_i(int fd, char *buffer, int length) {
     //Write trama I
     int res = write(fd, stuf, nr_bytes);
 
-    /*for (int i = 0; i < nr_bytes-1; i++) {
+    for (int i = 0; i < nr_bytes-1; i++) {
         printf("%02x", stuf[i]);
     }
-    printf("%02x - %d data bytes written\n", stuf[nr_bytes-1], length);*/
+    printf("%02x - %d data bytes written\n", stuf[nr_bytes-1], length);
 
     return length;
 }
@@ -787,12 +787,12 @@ int read_i(int fd, char *buffer, int *reject) {
     //New trama
     if (nr_tramaI == data[1] || (!control_start && data[1] == '\0')) {
         //bcc2 wrong, then reject
-        if (*reject)  
+        if (*reject)
             return REJECT_DATA;
 
         //bcc good, then accept
         memcpy(buffer, data, STR_SIZE);
-        if (!control_start) 
+        if (!control_start)
             nr_tramaI = (nr_tramaI + 1) % 256;
         control_start = 0;
     }
@@ -801,10 +801,10 @@ int read_i(int fd, char *buffer, int *reject) {
         data_bytes = REJECT_DATA;
     }
 
-    /*for (int i = 0; i < n_bytes-1; i++) {
+    for (int i = 0; i < n_bytes-1; i++) {
         printf("%02x", trama[i]);
     }
-    printf("%02x - %d data bytes read\n", trama[n_bytes-1], data_bytes);*/
+    printf("%02x - %d data bytes read\n", trama[n_bytes-1], data_bytes);
 
     return data_bytes;
 }
@@ -950,4 +950,3 @@ int write_rej(int fd) {
 
     return res;
 }
-
