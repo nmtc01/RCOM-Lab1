@@ -88,8 +88,8 @@ void array_to_packet(void *packet_void_ptr, char *buffer) {
     data_packet_ptr->sequence_number = buffer[1];
     data_packet_ptr->nr_bytes2 = buffer[2];
     data_packet_ptr->nr_bytes1 = buffer[3];
-    data_packet_ptr->data = malloc(FRAG_SIZE+data_packet_ptr->nr_bytes1);
-    memcpy(data_packet_ptr->data, (buffer + 4), FRAG_SIZE+data_packet_ptr->nr_bytes1);
+    data_packet_ptr->data = malloc(buffer[2]*256+buffer[3]);
+    memcpy(data_packet_ptr->data, (buffer + 4), buffer[2]*256+buffer[3]);
 
     break;
   // START
@@ -98,20 +98,11 @@ void array_to_packet(void *packet_void_ptr, char *buffer) {
     ctrl_packet_ptr->size.type = buffer[1];
     ctrl_packet_ptr->size.length = buffer[2];
     ctrl_packet_ptr->size.value = malloc(buffer[2]);
-    if (ctrl_packet_ptr->size.value == NULL) {
-      message("Failed to allocate space. SIZE VALUE");
-      exit(3);
-    }
     strcpy(ctrl_packet_ptr->size.value, (buffer + 3));
 
     ctrl_packet_ptr->name.type = buffer[3 + buffer[2]];
     ctrl_packet_ptr->name.length = buffer[4 + buffer[2]];
     ctrl_packet_ptr->name.value = malloc(buffer[4 + buffer[2]]);
-    if (ctrl_packet_ptr->name.value == NULL) {
-      message("Failed to allocate space. NAME VALUE");
-      exit(3);
-    }
-
     strcpy(ctrl_packet_ptr->name.value, (buffer + 5 + buffer[2]));
     break;
   // END
@@ -120,19 +111,11 @@ void array_to_packet(void *packet_void_ptr, char *buffer) {
     ctrl_packet_ptr->size.type = buffer[1];
     ctrl_packet_ptr->size.length = buffer[2];
     ctrl_packet_ptr->size.value = malloc(buffer[2]);
-    if (ctrl_packet_ptr->size.value == NULL) {
-      message("Failed to allocate space. SIZE VALUE");
-      exit(3);
-    }
     strcpy(ctrl_packet_ptr->size.value, (buffer + 3));
 
     ctrl_packet_ptr->name.type = buffer[3 + buffer[2]];
     ctrl_packet_ptr->name.length = buffer[4 + buffer[2]];
     ctrl_packet_ptr->name.value = malloc(buffer[4 + buffer[2]]);
-    if (ctrl_packet_ptr->name.value == NULL) {
-      message("Failed to allocate space. SIZE VALUE");
-      exit(3);
-    }
     strcpy(ctrl_packet_ptr->name.value, (buffer + 5 + buffer[2]));
     break;
   default:

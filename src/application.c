@@ -60,8 +60,9 @@ int main(int argc, char **argv) {
 
     // Send START packet
     buffer = realloc(buffer, 5 + start_packet.size.length + start_packet.name.length);
+    memset(buffer, '\0', 5 + start_packet.size.length + start_packet.name.length);
     packet_to_array(&start_packet, buffer);
-    n_chars_written = llwrite(application.fd_port, buffer, STR_SIZE);
+    n_chars_written = llwrite(application.fd_port, buffer, 5 + start_packet.size.length + start_packet.name.length);
     if (n_chars_written < 0) {
       perror("llwrite");
       return -1;
@@ -79,10 +80,11 @@ int main(int argc, char **argv) {
       fragment = realloc(fragment, numbytes);
       memcpy(data_packet.data, fragment, numbytes);
 
-      buffer = realloc(buffer, 5 + start_packet.size.length + start_packet.name.length);
+      buffer = realloc(buffer, 4 + data_packet.nr_bytes2*256 + data_packet.nr_bytes1);
+      memset(buffer, '\0', 4 + data_packet.nr_bytes2*256 + data_packet.nr_bytes1);
       packet_to_array(&data_packet, buffer);
 
-      n_chars_written = llwrite(application.fd_port, buffer, STR_SIZE);
+      n_chars_written = llwrite(application.fd_port, buffer, 4 + data_packet.nr_bytes2*256 + data_packet.nr_bytes1);
       if (n_chars_written < 0) {
         perror("llwrite");
         return -1;
@@ -91,19 +93,15 @@ int main(int argc, char **argv) {
     close(fd_file);
 
     // Send END packet
-    for (int i = 0; i < FRAG_SIZE; i++) {
-      buffer[i] = '\0';
-    }
+    buffer = realloc(buffer, 5 + end_packet.size.length + end_packet.name.length);
+    memset(buffer, '\0', 5 + end_packet.size.length + end_packet.name.length);
     packet_to_array(&end_packet, buffer);
-    n_chars_written = llwrite(application.fd_port, buffer, STR_SIZE);
+    n_chars_written = llwrite(application.fd_port, buffer, 5 + end_packet.size.length + end_packet.name.length);
     free(buffer);
     if (n_chars_written < 0) {
       perror("llwrite");
       return -1;
     }
-
-    //free(data_packet.data);
-
   }
   else {
     // RECEIVER
@@ -111,7 +109,7 @@ int main(int argc, char **argv) {
     // Fragments of file to read
     ctrl_packet start_packet, end_packet;
     data_packet data_packet;
-    unsigned char read_buffer[STR_SIZE];
+    unsigned char read_buffer[500];
     int n_chars_read;
 
     // Receive information
@@ -126,7 +124,7 @@ int main(int argc, char **argv) {
     array_to_packet(&start_packet, read_buffer);
 
     // Create file
-    int fd_file = open(start_packet.name.value, O_WRONLY | O_CREAT | O_TRUNC | O_APPEND, 0664);
+    int fd_file = open(start_packet.name.value, O_WRONLY | O_CREAT | O_TRUNC , 0664);
     if (fd_file < 0) {
       perror("Opening File");
       return -1;
@@ -141,7 +139,7 @@ int main(int argc, char **argv) {
 
       if(read_buffer[0] == 1){
         array_to_packet(&data_packet, read_buffer);
-        write(fd_file, data_packet.data, FRAG_SIZE);
+        write(fd_file, data_packet.data, data_packet.nr_bytes2*256+data_packet.nr_bytes1);
       }
       else {
         array_to_packet(&end_packet, read_buffer);
@@ -172,4 +170,3 @@ void setup(int argc, char **argv) {
 
   message("Checked arguments");
 }
-
