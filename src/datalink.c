@@ -18,6 +18,7 @@ volatile sig_atomic_t break_read_loop = 0;
 volatile sig_atomic_t timed_out = 0;
 volatile sig_atomic_t nr_tramaI = 0;
 volatile sig_atomic_t control_start = 1;
+volatile sig_atomic_t fd_port;
 struct termios oldtio;
 struct termios newtio;
 enum state receiving_ua_state;
@@ -47,6 +48,8 @@ int open_port(int port) {
 
     //Set flags
     set_flags(fd);
+
+    fd_port = fd;
 
     return fd;
 }
@@ -88,6 +91,8 @@ void timeout_handler() {
         received_i = 0;
         receiving_data_state = START_I;
     }
+
+    fcntl(fd_port, F_SETFL, O_NONBLOCK);
 
     timed_out = 1;
     break_read_loop = 1;
