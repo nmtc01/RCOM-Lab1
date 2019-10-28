@@ -98,7 +98,7 @@ int main(int argc, char **argv) {
       return -1;
     }
 
-    free(data_packet.data);
+    //free(data_packet.data);
 
   } 
   else {
