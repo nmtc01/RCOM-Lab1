@@ -76,10 +76,10 @@ struct linkLayer {
 int llopen(int port, int status);
 
 //Write
-int llwrite(int fd, char* packet, int length);
+int llwrite(int fd, unsigned char* packet, int length);
 
 //Read
-int llread(int fd, char* buffer);
+int llread(int fd, unsigned char* buffer);
 
 //Close
 int llclose(int fd, int status);

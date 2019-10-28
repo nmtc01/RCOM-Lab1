@@ -43,7 +43,7 @@ int llopen(int port, int status) {
   return fd;
 }
 
-int llwrite(int fd, char *buffer, int length) {
+int llwrite(int fd, unsigned char *buffer, int length) {
   int res_i;
     //Reset flag
     received_i = 0;
@@ -78,7 +78,7 @@ int llwrite(int fd, char *buffer, int length) {
     return res_i;
 }
 
-int llread(int fd, char *buffer) {
+int llread(int fd, unsigned char *buffer) {
   //Read trama I
     message("Reading Trama I");
     int reject = 0;
@@ -98,7 +98,6 @@ int llread(int fd, char *buffer) {
             datalink.sequenceNumber = (datalink.sequenceNumber + 1) % 2;
         timed_out = 0;
     }
-
     return data_bytes;
 }
 
@@ -825,6 +824,10 @@ int read_i(int fd, char *buffer, int *reject) {
     }
     printf("%02x - %d data bytes read\n", trama[n_bytes-1], data_bytes);
 
+    for(int i = 0; i < 31; i++){
+        printf("%02x", buffer[i]);
+    }
+    printf("\n FFFIHJSUIHUIDS");
     return data_bytes;
 }
 

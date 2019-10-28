@@ -22,7 +22,7 @@ void make_packets(int fd_file, ctrl_packet *start_packet, ctrl_packet *end_packe
   data_packet->sequence_number = 255;
   data_packet->nr_bytes2 = FRAG_SIZE / 256;
   data_packet->nr_bytes1 = FRAG_SIZE % 256;
-  data_packet->data = malloc(data_packet->nr_bytes2*256 + data_packet->nr_bytes1);
+  data_packet->data = malloc(data_packet->nr_bytes2*256 + data_packet->nr_bytes1+2);
 
   end_packet->control = 3;
   end_packet->size.type = 0;
