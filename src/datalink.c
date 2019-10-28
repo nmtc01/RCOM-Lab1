@@ -832,7 +832,7 @@ int read_rr(int fd) {
     break_read_loop = 0;
 
     while (!break_read_loop) {
-        if (receiving_rr_state != FINISH_I) {
+        if (receiving_rr_state != FINISH) {
             res = read(fd, read_char, sizeof(char));
             rr[n_bytes] = read_char[0];
         }
