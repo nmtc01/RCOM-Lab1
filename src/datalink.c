@@ -820,10 +820,10 @@ int read_i(int fd, char *buffer, int *reject) {
         data_bytes = REJECT_DATA;
     }
 
-    /*for (int i = 0; i < n_bytes-1; i++) {
+    for (int i = 0; i < n_bytes-1; i++) {
         printf("%02x", trama[i]);
     }
-    printf("%02x - %d data bytes read\n", trama[n_bytes-1], data_bytes);*/
+    printf("%02x - %d data bytes read\n", trama[n_bytes-1], data_bytes);
 
     return data_bytes;
 }
