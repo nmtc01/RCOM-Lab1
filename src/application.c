@@ -51,7 +51,7 @@ int main(int argc, char **argv) {
     make_packets(fd_file, &start_packet, &end_packet, &data_packet);
 
     // Fragments of file to send
-    unsigned char *fragment;
+    unsigned char *fragment = malloc(STR_SIZE);
     unsigned char *buffer = malloc(STR_SIZE);
     int numbytes, size_packet, n_chars_written;
 
@@ -89,6 +89,7 @@ int main(int argc, char **argv) {
         perror("llwrite");
         return -1;
       }
+      fragment = realloc(fragment, FRAG_SIZE);
     }
     close(fd_file);
 
