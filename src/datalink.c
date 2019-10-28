@@ -38,7 +38,7 @@ int open_port(int port) {
     else
         strcpy(datalink.port, "/dev/ttyS0");
 
-    fd = open(datalink.port, O_RDWR | O_NOCTTY | O_NONBLOCK);
+    fd = open(datalink.port, O_RDWR | O_NOCTTY);
 
     if (fd < 0)
         return fd;
@@ -178,8 +178,10 @@ void read_ua(int fd, int status) {
         A = A_ANS;
 
     while (!break_read_loop) {
-        res = read(fd, read_char, sizeof(char));
-        ua[n_bytes] = read_char[0];
+        if (receiving_ua_state != FINISH) {
+            res = read(fd, read_char, sizeof(char));
+            ua[n_bytes] = read_char[0];
+        }
 
         switch (receiving_ua_state) {
             case START: {
@@ -259,8 +261,10 @@ void read_set(int fd) {
 
     // READ
     while (!received_set) {
-        res = read(fd, read_char, sizeof(char));
-        set[n_bytes] = read_char[0];
+         if (receiving_set_state != FINISH) {
+            res = read(fd, read_char, sizeof(char));
+            set[n_bytes] = read_char[0];
+         }
 
         switch (receiving_set_state) {
             case START: {
@@ -545,7 +549,7 @@ int sendITramas(int fd, char *buffer, int length) {
             alarm(0);
 
             if (!rej) {
-            //Change sequence number
+                //Change sequence number
                 if (!timed_out)
                     datalink.sequenceNumber = (datalink.sequenceNumber + 1) % 2;
                 timed_out = 0;
@@ -634,10 +638,10 @@ int write_i(int fd, char *buffer, int length) {
     //Write trama I
     int res = write(fd, stuf, nr_bytes);
 
-    /*for (int i = 0; i < nr_bytes-1; i++) {
+    for (int i = 0; i < nr_bytes-1; i++) {
         printf("%02x", stuf[i]);
     }
-    printf("%02x - %d data bytes written\n", stuf[nr_bytes-1], length);*/
+    printf("%02x - %d data bytes written\n", stuf[nr_bytes-1], length);
 
     return length;
 }
