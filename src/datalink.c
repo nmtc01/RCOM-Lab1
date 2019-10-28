@@ -649,10 +649,10 @@ int write_i(int fd, char *buffer, int length) {
     //Write trama I
     int res = write(fd, stuf, nr_bytes);
 
-    for (int i = 0; i < nr_bytes-1; i++) {
+    /*for (int i = 0; i < nr_bytes-1; i++) {
         printf("%02x", stuf[i]);
     }
-    printf("%02x - %d data bytes written\n", stuf[nr_bytes-1], length);
+    printf("%02x - %d data bytes written\n", stuf[nr_bytes-1], length);*/
 
     return length;
 }
