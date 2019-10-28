@@ -77,7 +77,6 @@ int main(int argc, char **argv) {
 
       // Send DATA packets
       data_packet.sequence_number = (data_packet.sequence_number + 1) % 256;
-      fragment = realloc(fragment, numbytes);
       memcpy(data_packet.data, fragment, numbytes);
 
       buffer = realloc(buffer, 4 + data_packet.nr_bytes2*256 + data_packet.nr_bytes1);
@@ -89,7 +88,6 @@ int main(int argc, char **argv) {
         perror("llwrite");
         return -1;
       }
-      fragment = realloc(fragment, FRAG_SIZE);
     }
     close(fd_file);
 
@@ -125,7 +123,7 @@ int main(int argc, char **argv) {
     array_to_packet(&start_packet, read_buffer);
 
     // Create file
-    int fd_file = open(start_packet.name.value, O_WRONLY | O_CREAT | O_TRUNC , 0664);
+    int fd_file = open(start_packet.name.value, O_WRONLY | O_CREAT | O_TRUNC |O_APPEND , 0664);
     if (fd_file < 0) {
       perror("Opening File");
       return -1;
@@ -141,6 +139,7 @@ int main(int argc, char **argv) {
       if(read_buffer[0] == 1){
         array_to_packet(&data_packet, read_buffer);
         write(fd_file, data_packet.data, data_packet.nr_bytes2*256+data_packet.nr_bytes1);
+        free(data_packet.data);
       }
       else {
         array_to_packet(&end_packet, read_buffer);

@@ -88,8 +88,8 @@ void array_to_packet(void *packet_void_ptr, char *buffer) {
     data_packet_ptr->sequence_number = buffer[1];
     data_packet_ptr->nr_bytes2 = buffer[2];
     data_packet_ptr->nr_bytes1 = buffer[3];
-    data_packet_ptr->data = malloc(buffer[2]*256+buffer[3]);
-    memcpy(data_packet_ptr->data, (buffer + 4), buffer[2]*256+buffer[3]);
+    data_packet_ptr->data = malloc(buffer[2]*256+buffer[3]+2);
+    memcpy(data_packet_ptr->data, (buffer + 4), buffer[2]*256+buffer[3]+2);
 
     break;
   // START
