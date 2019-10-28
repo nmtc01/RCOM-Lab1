@@ -450,8 +450,10 @@ void read_disc(int fd, int status) {
     break_read_loop = 0;
 
     while (!break_read_loop) {
-        res = read(fd, read_char, sizeof(char));
-        disc[n_bytes] = read_char[0];
+        if (receiving_disc_state != FINISH) {
+            res = read(fd, read_char, sizeof(char));
+            disc[n_bytes] = read_char[0];
+        }
 
         switch (receiving_disc_state) {
             case START: {
