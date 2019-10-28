@@ -72,6 +72,18 @@ struct linkLayer {
     unsigned int numTransmissions;
 };
 
+//Open
+int llopen(int port, int status);
+
+//Write
+int llwrite(int fd, char* packet, int length);
+
+//Read
+int llread(int fd, char* buffer);
+
+//Close
+int llclose(int fd, int status);
+
 void message(char *message);
 int open_port(int port);
 void set_flags(int fd);
@@ -79,9 +91,6 @@ void cleanup(int fd);
 void timeout_handler();
 
 int sendStablishTramas(int fd, int status);
-int sendDiscTramas(int fd, int status);
-int sendITramas(int fd, char *buffer, int length);
-int receiveITramas(int fd, unsigned char *buffer);
 
 int write_set(int fd);
 void read_ua(int fd, int status);
