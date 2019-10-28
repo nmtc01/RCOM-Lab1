@@ -14,15 +14,5 @@ struct appLayer {
     int status;
 };
 
-//Open
+
 void setup(int argc, char** argv);
-int llopen(int port, int status);
-
-//Write
-int llwrite(int fd, char* packet, int length);
-
-//Read
-int llread(int fd, char* buffer);
-
-//Close
-int llclose(int fd, int status);

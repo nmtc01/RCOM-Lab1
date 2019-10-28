@@ -27,6 +27,144 @@ enum state receiving_disc_state;
 enum state receiving_rr_state;
 enum dataState receiving_data_state;
 
+int llopen(int port, int status) {
+  // Open serial port
+  int fd = open_port(port);
+  // Check errors
+  if (fd < 0)
+    return fd;
+
+  // Tramas set and ua
+  int res = sendStablishTramas(fd, status);
+  // Check errors
+  if (res < 0)
+    return res;
+
+  return fd;
+}
+
+int llwrite(int fd, char *buffer, int length) {
+  int res_i;
+    //Reset flag
+    received_i = 0;
+
+    while (n_timeouts < datalink.numTransmissions) {
+        if (!received_i) {
+            //Write trama I
+            message("Writting Trama I");
+            res_i = write_i(fd, buffer, length);
+            alarm(datalink.timeout);
+
+            //Read trama RR
+            message("Reading Trama RR");
+            int rej = read_rr(fd);
+            alarm(0);
+            fcntl(fd, F_SETFL, ~O_NONBLOCK);
+
+            if (!rej) {
+                //Change sequence number
+                if (!timed_out)
+                    datalink.sequenceNumber = (datalink.sequenceNumber + 1) % 2;
+                timed_out = 0;
+            }
+        } else
+            break;
+    }
+
+    //Stop execution if could not send trama I after MAX_TIMEOUTS
+    if (!received_i)
+        return -1;
+
+    return res_i;
+}
+
+int llread(int fd, char *buffer) {
+  //Read trama I
+    message("Reading Trama I");
+    int reject = 0;
+    int data_bytes = read_i(fd, buffer, &reject);
+    if (reject) {
+        //Write trama REJ
+        message("Writting Trama REJ");
+        int res_rej = write_rej(fd);
+    }
+    else {
+        //Write trama RR
+        message("Writting Trama RR");
+        int res_rr = write_rr(fd);
+
+        //Change sequence number
+        if (!timed_out)
+            datalink.sequenceNumber = (datalink.sequenceNumber + 1) % 2;
+        timed_out = 0;
+    }
+
+    return data_bytes;
+}
+
+int llclose(int fd, int status) {
+  if (status == TRANSMITTER) {
+        //Transmitter
+
+        while (n_timeouts < datalink.numTransmissions) {
+            if (!received_disc) {
+                //Write disc
+                message("Writting disc");
+                int res_disc = write_disc(fd, status);
+                if (res_disc < 0)
+                    return res_disc;
+                alarm(datalink.timeout);
+
+                //Read disc
+                message("Reading disc");
+                read_disc(fd, status);
+                alarm(0);
+                fcntl(fd, F_SETFL, ~O_NONBLOCK);
+            } else
+                break;
+        }
+
+        //Stop execution if could not stablish connection after MAX_TIMEOUTS
+        if (!received_disc)
+            return -1;
+
+        //Write ua
+        message("Writting ua");
+        int res_ua = write_ua(fd, status);
+        if (res_ua < 0)
+            return res_ua;
+
+    } else {
+        //Receiver
+
+        //Read disc
+        message("Reading disc");
+        read_disc(fd, status);
+
+        while (n_timeouts < datalink.numTransmissions) {
+            if (!received_ua) {
+                //Write disc
+                message("Writting disc");
+                int res_disc = write_disc(fd, status);
+                if (res_disc < 0)
+                    return res_disc;
+                alarm(datalink.timeout);
+
+                //Read ua
+                message("Reading ua");
+                read_ua(fd, status);
+                alarm(0);
+                fcntl(fd, F_SETFL, ~O_NONBLOCK);
+            } else
+                break;
+        }
+    }
+
+	cleanup(fd);
+
+	return 1;
+}
+
 void message(char *message) {
     printf("!--%s\n", message);
 }
@@ -360,67 +498,6 @@ int write_ua(int fd, int status) {
     return res;
 }
 
-int sendDiscTramas(int fd, int status) {
-    if (status == TRANSMITTER) {
-        //Transmitter
-
-        while (n_timeouts < datalink.numTransmissions) {
-            if (!received_disc) {
-                //Write disc
-                message("Writting disc");
-                int res_disc = write_disc(fd, status);
-                if (res_disc < 0)
-                    return res_disc;
-                alarm(datalink.timeout);
-
-                //Read disc
-                message("Reading disc");
-                read_disc(fd, status);
-                alarm(0);
-                fcntl(fd, F_SETFL, ~O_NONBLOCK);
-            } else
-                break;
-        }
-
-        //Stop execution if could not stablish connection after MAX_TIMEOUTS
-        if (!received_disc)
-            return -1;
-
-        //Write ua
-        message("Writting ua");
-        int res_ua = write_ua(fd, status);
-        if (res_ua < 0)
-            return res_ua;
-
-    } else {
-        //Receiver
-
-        //Read disc
-        message("Reading disc");
-        read_disc(fd, status);
-
-        while (n_timeouts < datalink.numTransmissions) {
-            if (!received_ua) {
-                //Write disc
-                message("Writting disc");
-                int res_disc = write_disc(fd, status);
-                if (res_disc < 0)
-                    return res_disc;
-                alarm(datalink.timeout);
-
-                //Read ua
-                message("Reading ua");
-                read_ua(fd, status);
-                alarm(0);
-                fcntl(fd, F_SETFL, ~O_NONBLOCK);
-            } else
-                break;
-        }
-    }
-
-    return 0;
-}
-
 int write_disc(int fd, int status) {
     //Create trama DISC
     unsigned char disc[5];
@@ -541,64 +618,6 @@ void cleanup(int fd) {
     message("Cleaned up terminal.");
 }
 
-int sendITramas(int fd, char *buffer, int length) {
-    int res_i;
-    //Reset flag
-    received_i = 0;
-
-    while (n_timeouts < datalink.numTransmissions) {
-        if (!received_i) {
-            //Write trama I
-            message("Writting Trama I");
-            res_i = write_i(fd, buffer, length);
-            alarm(datalink.timeout);
-
-            //Read trama RR
-            message("Reading Trama RR");
-            int rej = read_rr(fd);
-            alarm(0);
-            fcntl(fd, F_SETFL, ~O_NONBLOCK);
-
-            if (!rej) {
-                //Change sequence number
-                if (!timed_out)
-                    datalink.sequenceNumber = (datalink.sequenceNumber + 1) % 2;
-                timed_out = 0;
-            }
-        } else
-            break;
-    }
-
-    //Stop execution if could not send trama I after MAX_TIMEOUTS
-    if (!received_i)
-        return -1;
-
-    return res_i;
-}
-
-int receiveITramas(int fd, unsigned char *buffer) {
-    //Read trama I
-    message("Reading Trama I");
-    int reject = 0;
-    int data_bytes = read_i(fd, buffer, &reject);
-    if (reject) {
-        //Write trama REJ
-        message("Writting Trama REJ");
-        int res_rej = write_rej(fd);
-    }
-    else {
-        //Write trama RR
-        message("Writting Trama RR");
-        int res_rr = write_rr(fd);
-
-        //Change sequence number
-        if (!timed_out)
-            datalink.sequenceNumber = (datalink.sequenceNumber + 1) % 2;
-        timed_out = 0;
-    }
-
-    return data_bytes;
-}
 
 int write_i(int fd, char *buffer, int length) {
     //Create trama
@@ -649,10 +668,10 @@ int write_i(int fd, char *buffer, int length) {
     //Write trama I
     int res = write(fd, stuf, nr_bytes);
 
-    /*for (int i = 0; i < nr_bytes-1; i++) {
+    for (int i = 0; i < nr_bytes-1; i++) {
         printf("%02x", stuf[i]);
     }
-    printf("%02x - %d data bytes written\n", stuf[nr_bytes-1], length);*/
+    printf("%02x - %d data bytes written\n", stuf[nr_bytes-1], length);
 
     return length;
 }
