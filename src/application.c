@@ -51,15 +51,14 @@ int main(int argc, char **argv) {
     make_packets(fd_file, &start_packet, &end_packet, &data_packet);
 
     // Fragments of file to send
-    unsigned char *fragment = malloc(STR_SIZE);
-    unsigned char *buffer = malloc(STR_SIZE);
+    unsigned char *fragment = malloc(FRAG_SIZE);
+    unsigned char buffer[800];
     int numbytes, size_packet, n_chars_written;
 
     // Write information
     message("Started llwrite");
 
     // Send START packet
-    buffer = realloc(buffer, 5 + start_packet.size.length + start_packet.name.length);
     memset(buffer, '\0', 5 + start_packet.size.length + start_packet.name.length);
     packet_to_array(&start_packet, buffer);
     n_chars_written = llwrite(application.fd_port, buffer, 5 + start_packet.size.length + start_packet.name.length);
@@ -67,6 +66,7 @@ int main(int argc, char **argv) {
       perror("llwrite");
       return -1;
     }
+		printf("\nFFFF\n");
 
     // Read fragments and send them one by one
     while ((numbytes = read(fd_file, fragment, FRAG_SIZE)) != 0) {
@@ -74,31 +74,29 @@ int main(int argc, char **argv) {
         perror("readFile");
         return -1;
       }
-
+		printf("\nFFFF\n");
       // Send DATA packets
       data_packet.sequence_number = (data_packet.sequence_number + 1) % 256;
-      fragment = realloc(fragment, numbytes);
       memcpy(data_packet.data, fragment, numbytes);
+		printf("\nFFFF\n");
+	
 
-      buffer = realloc(buffer, 4 + data_packet.nr_bytes2*256 + data_packet.nr_bytes1);
-      memset(buffer, '\0', 4 + data_packet.nr_bytes2*256 + data_packet.nr_bytes1);
+      memset(buffer, '\0', 4 + data_packet.nr_bytes2*256 + data_packet.nr_bytes1 + 2);
       packet_to_array(&data_packet, buffer);
+		printf("\nFFFF\n");
 
-      n_chars_written = llwrite(application.fd_port, buffer, 4 + data_packet.nr_bytes2*256 + data_packet.nr_bytes1);
+      n_chars_written = llwrite(application.fd_port, buffer, 4 + data_packet.nr_bytes2*256 + data_packet.nr_bytes1 + 2);
       if (n_chars_written < 0) {
         perror("llwrite");
         return -1;
-      }
-      fragment = realloc(fragment, FRAG_SIZE);
+      }		printf("\nFFFF\n");
     }
     close(fd_file);
 
     // Send END packet
-    buffer = realloc(buffer, 5 + end_packet.size.length + end_packet.name.length);
     memset(buffer, '\0', 5 + end_packet.size.length + end_packet.name.length);
     packet_to_array(&end_packet, buffer);
     n_chars_written = llwrite(application.fd_port, buffer, 5 + end_packet.size.length + end_packet.name.length);
-    free(buffer);
     if (n_chars_written < 0) {
       perror("llwrite");
       return -1;
