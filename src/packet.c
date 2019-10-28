@@ -41,7 +41,7 @@ void receiver_packets(ctrl_packet *start_packet, ctrl_packet *end_packet, data_p
   data_packet->sequence_number = (unsigned char)255;
   data_packet->nr_bytes2 = (unsigned char)FRAG_SIZE / 256;
   data_packet->nr_bytes1 = (unsigned char)FRAG_SIZE % 256;
-  data_packet->data = malloc(data_packet->nr_bytes2*256 + data_packet->nr_bytes1+2);
+  data_packet->data = malloc(FRAG_SIZE);
 
   start_packet->control = 2;
   start_packet->size.type = 0;
@@ -119,7 +119,7 @@ void array_to_packet(void *packet_void_ptr, char *buffer) {
     ctrl_packet_ptr->size.length = buffer[2];
     ctrl_packet_ptr->size.value = malloc(ctrl_packet_ptr->size.length);
     memcpy(ctrl_packet_ptr->size.value, (buffer + 3), buffer[2]);
-    
+
     ctrl_packet_ptr->name.type = buffer[3 + buffer[2]];
     ctrl_packet_ptr->name.length = buffer[4 + buffer[2]];
     ctrl_packet_ptr->name.value = malloc(ctrl_packet_ptr->name.length);

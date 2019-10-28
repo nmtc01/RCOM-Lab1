@@ -95,7 +95,7 @@ int main(int argc, char **argv) {
     ctrl_packet start_packet, end_packet;
     data_packet data_packet;
     unsigned char read_buffer[STR_SIZE];
-    int n_chars_read;
+    int n_chars_read, size, packet_nr = 0, fd_file;
 
     receiver_packets(&start_packet, &end_packet, &data_packet);
 
@@ -107,8 +107,12 @@ int main(int argc, char **argv) {
     n_chars_read = llread(application.fd_port, read_buffer);
     LTZ_RET(n_chars_read)
     array_to_packet(&start_packet, read_buffer);
+
+    /* sprintf(size, "%ld", start_packet.size.value);    
+    printf("File '%s' of size '%d'\n", start_packet.name.value, size);
+ */
     // Create file
-    int fd_file = open(start_packet.name.value, O_WRONLY | O_CREAT | O_TRUNC |O_APPEND , 0664);
+    fd_file = open(start_packet.name.value, O_WRONLY | O_CREAT | O_TRUNC |O_APPEND , 0664);
     LTZ_RET(fd_file)
 
     // Read fragments
@@ -117,8 +121,14 @@ int main(int argc, char **argv) {
       LTZ_RET(n_chars_read)
 
       if(read_buffer[0] == 1){
+        printf("##############\nPACKET NR %d\n", packet_nr);
+        packet_nr++;
         array_to_packet(&data_packet, read_buffer);
-        write(fd_file, data_packet.data, data_packet.nr_bytes2*256+data_packet.nr_bytes1);
+        write(fd_file, read_buffer+4, n_chars_read-4);
+        for(int i = 0; i < n_chars_read; i++){
+          printf("%02X", read_buffer[i]);
+        }
+        printf("\n");
       }
       else {
         array_to_packet(&end_packet, read_buffer);
