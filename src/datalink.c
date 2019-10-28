@@ -123,6 +123,7 @@ int sendStablishTramas(int fd, int status) {
                 message("Reading ua");
                 read_ua(fd, status);
                 alarm(0);
+                fcntl(fd, F_SETFL, ~O_NONBLOCK);
             } else
                 break;
         }
@@ -376,6 +377,7 @@ int sendDiscTramas(int fd, int status) {
                 message("Reading disc");
                 read_disc(fd, status);
                 alarm(0);
+                fcntl(fd, F_SETFL, ~O_NONBLOCK);
             } else
                 break;
         }
@@ -410,6 +412,7 @@ int sendDiscTramas(int fd, int status) {
                 message("Reading ua");
                 read_ua(fd, status);
                 alarm(0);
+                fcntl(fd, F_SETFL, ~O_NONBLOCK);
             } else
                 break;
         }
@@ -554,6 +557,7 @@ int sendITramas(int fd, char *buffer, int length) {
             message("Reading Trama RR");
             int rej = read_rr(fd);
             alarm(0);
+            fcntl(fd, F_SETFL, ~O_NONBLOCK);
 
             if (!rej) {
                 //Change sequence number
