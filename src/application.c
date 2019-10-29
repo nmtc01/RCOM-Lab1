@@ -49,6 +49,7 @@ int main(int argc, char **argv) {
     // Create packets
     ctrl_packet start_packet, end_packet;
     data_packet data_packet;
+    int packet_nr = 0;
     transmitter_packets(fd_file, &start_packet, &end_packet, &data_packet);
 
     // Fragments of file to send
@@ -78,6 +79,8 @@ int main(int argc, char **argv) {
       memcpy(data_packet.data, fragment, numbytes);
       packet_to_array(&data_packet, buffer);
 
+      printf("###################\nPACKET NR %d\n", packet_nr);
+      packet_nr++;
       n_chars_written = llwrite(application.fd_port, buffer, DATA_SIZE);
       LTZ_RET(n_chars_written)
       memset(buffer, '\0', MAX_DATA_SIZE);
