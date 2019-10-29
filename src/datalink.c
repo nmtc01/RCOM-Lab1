@@ -171,10 +171,15 @@ void message(char *message) {
 int open_port(int port) {
     int fd;
 
-    if (port)
-        strcpy(datalink.port, "/dev/ttyS1");
-    else
+    if (port == 0)
         strcpy(datalink.port, "/dev/ttyS0");
+    else if (port == 1)
+        strcpy(datalink.port, "/dev/ttyS1");
+	else if (port == 2)
+        strcpy(datalink.port, "/dev/ttyS2");
+	else if (port == 3)
+        strcpy(datalink.port, "/dev/ttyS3");
+	else strcpy(datalink.port, "/dev/ttyS4");
 
     fd = open(datalink.port, O_RDWR | O_NOCTTY);
 

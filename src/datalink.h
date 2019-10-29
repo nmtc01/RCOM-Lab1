@@ -24,6 +24,9 @@
 #define RECEIVER        21
 #define COM1            0
 #define COM2            1
+#define COM3            2
+#define COM4            3
+#define COM5            4
 
 // FLAGS
 #define FLAG            0x7E

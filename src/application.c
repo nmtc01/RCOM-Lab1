@@ -24,8 +24,14 @@ int main(int argc, char **argv) {
   int port;
   if ((strcmp("/dev/ttyS0", argv[2]) == 0))
     port = COM1;
-  else
+  else if ((strcmp("/dev/ttyS1", argv[2]) == 0))
     port = COM2;
+  else if ((strcmp("/dev/ttyS2", argv[2]) == 0))
+    port = COM3;
+  else if ((strcmp("/dev/ttyS3", argv[2]) == 0))
+    port = COM4;
+  else
+    port = COM5;
 
   // Stablish communication
   printf("\n###################\nStarted llopen\n");
@@ -158,7 +164,10 @@ int main(int argc, char **argv) {
 
 void setup(int argc, char **argv) {
   if ((argc != 3) || ((strcmp("/dev/ttyS0", argv[2]) != 0) &&
-                      (strcmp("/dev/ttyS1", argv[2]) != 0))) {
+                      (strcmp("/dev/ttyS1", argv[2]) != 0) &&)
+					  (strcmp("/dev/ttyS2", argv[2]) != 0) &&
+					  (strcmp("/dev/ttyS3", argv[2]) != 0) &&
+					  (strcmp("/dev/ttyS4", argv[2]) != 0)) {
     printf("Usage:\tnserial transmitter|receiver SerialPort\n\tex: nserial "
            "transmitter /dev/ttyS0\n");
     exit(1);
