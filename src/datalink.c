@@ -305,7 +305,7 @@ int write_set(int fd) {
 }
 
 void read_ua(int fd, int status) {
-    unsigned char ua[STR_SIZE];
+    unsigned char ua[MAX_FRAME_SIZE];
     int res;
     int n_bytes = 0;
     unsigned char read_char[1];
@@ -395,7 +395,7 @@ void read_ua(int fd, int status) {
 }
 
 void read_set(int fd) {
-    unsigned char set[STR_SIZE];
+    unsigned char set[MAX_FRAME_SIZE];
     unsigned char read_char[1];
     int n_bytes = 0;
     int res;
@@ -519,7 +519,7 @@ int write_disc(int fd, int status) {
 }
 
 void read_disc(int fd, int status) {
-    unsigned char disc[STR_SIZE];
+    unsigned char disc[MAX_FRAME_SIZE];
     int res;
     int n_bytes = 0;
     unsigned char read_char[1];
@@ -620,7 +620,8 @@ void cleanup(int fd) {
 
 int write_i(int fd, char *buffer, int length) {
     //Create trama
-    unsigned char trama[6 + length];
+    unsigned char trama[MAX_FRAME_SIZE];
+    unsigned char stuff[MAX_DATA_SIZE];
     u_int8_t bcc2 = 0x00;
     trama[0] = FLAG;
     trama[1] = A_CMD;
@@ -641,31 +642,28 @@ int write_i(int fd, char *buffer, int length) {
     int new_bytes = 0;
     int nr_bytes = 6 + length;
 
-    unsigned char *stuf = malloc(nr_bytes);
 
-    stuf[0] = trama[0];
-    stuf[1] = trama[1];
-    stuf[2] = trama[2];
-    stuf[3] = trama[3];
+    stuff[0] = trama[0];
+    stuff[1] = trama[1];
+    stuff[2] = trama[2];
+    stuff[3] = trama[3];
     for (int j = 4; j < 5 + length; j++) {
         if (trama[j] == FLAG) {
             nr_bytes++;
             new_bytes++;
-            stuf = (char *)realloc(stuf, nr_bytes);
-            stuf[j + new_bytes - 1] = ESCAPE;
-            stuf[j + new_bytes] = FLAG ^ STUF;
+            stuff[j + new_bytes - 1] = ESCAPE;
+            stuff[j + new_bytes] = FLAG ^ STUF;
         } else if (trama[j] == ESCAPE) {
             nr_bytes++;
             new_bytes++;
-            stuf = (char *)realloc(stuf, nr_bytes);
-            stuf[j + new_bytes - 1] = ESCAPE;
-            stuf[j + new_bytes] = ESCAPE ^ STUF;
-        } else stuf[j + new_bytes] = trama[j];
+            stuff[j + new_bytes - 1] = ESCAPE;
+            stuff[j + new_bytes] = ESCAPE ^ STUF;
+        } else stuff[j + new_bytes] = trama[j];
     }
-    stuf[nr_bytes - 1] = FLAG;
+    stuff[nr_bytes - 1] = FLAG;
 
     //Write trama I
-    int res = write(fd, stuf, nr_bytes);
+    int res = write(fd, stuff, nr_bytes);
 
     /*for (int i = 0; i < nr_bytes-1; i++) {
         printf("%02x", stuf[i]);
@@ -676,8 +674,8 @@ int write_i(int fd, char *buffer, int length) {
 }
 
 int read_i(int fd, char *buffer, int *reject) {
-    unsigned char trama[STR_SIZE] = {};
-    unsigned char data[STR_SIZE] = {};
+    unsigned char trama[MAX_FRAME_SIZE] = {};
+    unsigned char data[MAX_DATA_SIZE] = {};
     int res;
     int n_bytes = 0;
     int data_bytes = 0;
@@ -810,7 +808,7 @@ int read_i(int fd, char *buffer, int *reject) {
             return REJECT_DATA;
 
         //bcc good, then accept
-        memcpy(buffer, data, STR_SIZE);
+        memcpy(buffer, data, MAX_DATA_SIZE);
         if (!control_start)
             nr_tramaI = (nr_tramaI + 1) % 256;
         control_start = 0;
@@ -850,8 +848,8 @@ int write_rr(int fd) {
 }
 
 int read_rr(int fd) {
-    unsigned char rr[STR_SIZE];
-    memset(rr, '\0', STR_SIZE);
+    unsigned char rr[MAX_FRAME_SIZE];
+    memset(rr, '\0', MAX_FRAME_SIZE);
     u_int8_t c_rr, c_rej;
     int res;
     int rej = 0;

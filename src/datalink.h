@@ -17,30 +17,30 @@
 #include <termios.h>
 #include <unistd.h>
 
-#define BAUDRATE B38400
-#define STR_SIZE 500
-#define FRAG_SIZE 255
-#define TRANSMITTER 12
-#define RECEIVER 21
-#define COM1 0
-#define COM2 1
+#define BAUDRATE        B38400
+#define MAX_FRAME_SIZE  512
+#define MAX_DATA_SIZE   (MAX_FRAME_SIZE - 6)
+#define TRANSMITTER     12
+#define RECEIVER        21
+#define COM1            0
+#define COM2            1
 
 // FLAGS
-#define FLAG 0x7E
-#define A_CMD 0x03
-#define A_ANS 0x01
-#define C_SET 0x03
-#define C_UA 0x07
-#define C_DISC 0x0B
-#define C_0 0x00
-#define C_1 0x40
-#define C_RR0 0x05
-#define C_RR1 0x85
-#define C_REJ0 0x01
-#define C_REJ1 0x81
-#define ESCAPE 0x7D
-#define STUF 0x20
-#define REJECT_DATA 1
+#define FLAG            0x7E
+#define A_CMD           0x03
+#define A_ANS           0x01
+#define C_SET           0x03
+#define C_UA            0x07
+#define C_DISC          0x0B
+#define C_0             0x00
+#define C_1             0x40
+#define C_RR0           0x05
+#define C_RR1           0x85
+#define C_REJ0          0x01
+#define C_REJ1          0x81
+#define ESCAPE          0x7D
+#define STUF            0x20
+#define REJECT_DATA     1
 
 enum state {
     START,

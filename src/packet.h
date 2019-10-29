@@ -3,13 +3,14 @@
 #define FILE_TO_SEND "images/pinguim.gif"
 #define CNTRL_START 2
 #define CNTRL_END 3
+#define FRAG_SIZE       (MAX_DATA_SIZE / 2 - 4)             // C N L1 L2 FRAG
 
 typedef struct data_packet {
     unsigned char control;          // = 1 for data
     unsigned char sequence_number;  // number of data_packet
     unsigned char nr_bytes2;
     unsigned char nr_bytes1;  // K = 256 * nr_bytes2 + nr_bytes1
-    unsigned char* data;      // data with K bytes
+    unsigned char data[MAX_DATA_SIZE];      // data with K bytes
 } data_packet;
 
 typedef struct tlv_packet {

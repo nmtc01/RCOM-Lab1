@@ -51,23 +51,23 @@ int main(int argc, char **argv) {
     transmitter_packets(fd_file, &start_packet, &end_packet, &data_packet);
 
     // Fragments of file to send
-    unsigned char fragment[FRAG_SIZE];
-    unsigned char buffer[STR_SIZE];
+    unsigned char fragment[MAX_FRAME_SIZE];
+    unsigned char buffer[MAX_FRAME_SIZE];
     int numbytes, size_packet, n_chars_written;
 
     // Write information
     message("Started llwrite");
 
     // Send START packet
-    memset(buffer, '\0', STR_SIZE);
+    memset(buffer, '\0', MAX_FRAME_SIZE);
     packet_to_array(&start_packet, buffer);
     n_chars_written = llwrite(application.fd_port, buffer, START_SIZE);
     LTZ_RET(n_chars_written)
 
 
     // Read fragments and send them one by one
-    memset(buffer, '\0', STR_SIZE);
-    while ((numbytes = read(fd_file, fragment, FRAG_SIZE)) != 0) {
+    memset(buffer, '\0', MAX_FRAME_SIZE);
+    while ((numbytes = read(fd_file, fragment, MAX_FRAME_SIZE)) != 0) {
       LTZ_RET(numbytes)
 
       // Send DATA packets
@@ -79,7 +79,7 @@ int main(int argc, char **argv) {
 
       n_chars_written = llwrite(application.fd_port, buffer, DATA_SIZE);
       LTZ_RET(n_chars_written)
-      memset(buffer, '\0', STR_SIZE);
+      memset(buffer, '\0', MAX_FRAME_SIZE);
     }
     close(fd_file);
 
@@ -94,7 +94,7 @@ int main(int argc, char **argv) {
     // Fragments of file to read
     ctrl_packet start_packet, end_packet;
     data_packet data_packet;
-    unsigned char read_buffer[STR_SIZE];
+    unsigned char read_buffer[MAX_FRAME_SIZE];
     int n_chars_read, size, packet_nr = 0, fd_file;
 
     receiver_packets(&start_packet, &end_packet, &data_packet);
@@ -103,7 +103,7 @@ int main(int argc, char **argv) {
     message("Started llread");
 
     // Read START packet
-    memset(read_buffer, '\0', STR_SIZE);
+    memset(read_buffer, '\0', MAX_FRAME_SIZE);
     n_chars_read = llread(application.fd_port, read_buffer);
     LTZ_RET(n_chars_read)
     array_to_packet(&start_packet, read_buffer);
@@ -116,7 +116,7 @@ int main(int argc, char **argv) {
     LTZ_RET(fd_file)
 
     // Read fragments
-    memset(read_buffer, '\0', STR_SIZE);
+    memset(read_buffer, '\0', FRAG_SIZE);
     while ((n_chars_read = llread(application.fd_port, read_buffer)) != 0) {
       LTZ_RET(n_chars_read)
 
@@ -125,16 +125,12 @@ int main(int argc, char **argv) {
         packet_nr++;
         array_to_packet(&data_packet, read_buffer);
         write(fd_file, read_buffer+4, n_chars_read-4);
-        for(int i = 0; i < n_chars_read; i++){
-          printf("%02X", read_buffer[i]);
-        }
-        printf("\n");
       }
       else {
         array_to_packet(&end_packet, read_buffer);
         break;
       }
-      memset(read_buffer, '\0', STR_SIZE);
+      memset(read_buffer, '\0', MAX_FRAME_SIZE);
     }
 
     close(fd_file);
