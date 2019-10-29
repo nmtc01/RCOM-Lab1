@@ -9,7 +9,7 @@
 #include "application.h"
 
 int main(int argc, char **argv) {
-  printf("\n##############\nStarting program\n##############\n");
+  printf("###################\nStarting program\n###################\n");
   // Validate arguments
   setup(argc, argv);
 
@@ -144,7 +144,7 @@ int main(int argc, char **argv) {
     return -1;
   }
 
-  printf("\n##############\nFinishing program\n##############\n");
+  printf("\n###################nFinishing program\n###################n");
 
   return 0;
 }
