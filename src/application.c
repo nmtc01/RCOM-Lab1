@@ -164,7 +164,7 @@ int main(int argc, char **argv) {
 
 void setup(int argc, char **argv) {
   if ((argc != 3) || ((strcmp("/dev/ttyS0", argv[2]) != 0) &&
-                      (strcmp("/dev/ttyS1", argv[2]) != 0) &&)
+                      (strcmp("/dev/ttyS1", argv[2]) != 0) &&
 					  (strcmp("/dev/ttyS2", argv[2]) != 0) &&
 					  (strcmp("/dev/ttyS3", argv[2]) != 0) &&
 					  (strcmp("/dev/ttyS4", argv[2]) != 0)) {
