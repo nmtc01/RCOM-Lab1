@@ -167,7 +167,7 @@ void setup(int argc, char **argv) {
                       (strcmp("/dev/ttyS1", argv[2]) != 0) &&
 					  (strcmp("/dev/ttyS2", argv[2]) != 0) &&
 					  (strcmp("/dev/ttyS3", argv[2]) != 0) &&
-					  (strcmp("/dev/ttyS4", argv[2]) != 0)) {
+					  (strcmp("/dev/ttyS4", argv[2]) != 0))) {
     printf("Usage:\tnserial transmitter|receiver SerialPort\n\tex: nserial "
            "transmitter /dev/ttyS0\n");
     exit(1);
