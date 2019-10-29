@@ -41,7 +41,7 @@ int main(int argc, char **argv) {
     // Transmitter
     char file_to_send[255];
     printf("Input a file to send: ");
-    scanf("%s", file_to_send);
+    scanf("images/%s", file_to_send);
 
     // Open file
     int fd_file = open(file_to_send, O_RDONLY | O_NONBLOCK);
