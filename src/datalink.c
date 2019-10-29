@@ -769,7 +769,6 @@ int read_i(int fd, char *buffer, int *reject) {
                 } else if (read_char[0] == ESCAPE) {
                     receiving_data_state = ESCAPE_RCV_I;
                 } else {
-                    if(trama[n_bytes+1] == FLAG) break;
                     data[data_bytes] = trama[n_bytes];
                     n_bytes++;
                     data_bytes++;
