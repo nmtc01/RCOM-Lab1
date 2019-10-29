@@ -39,8 +39,12 @@ int main(int argc, char **argv) {
 
   if (application.status == TRANSMITTER) {
     // Transmitter
+    char file_to_send[255];
+    printf("Input a file to send: ");
+    scanf("%s", file_to_send);
+
     // Open file
-    int fd_file = open(FILE_TO_SEND, O_RDONLY | O_NONBLOCK);
+    int fd_file = open(file_to_send, O_RDONLY | O_NONBLOCK);
     if (fd_file < 0) {
       perror("Opening File");
       return -1;
@@ -50,7 +54,7 @@ int main(int argc, char **argv) {
     ctrl_packet start_packet, end_packet;
     data_packet data_packet;
     int packet_nr = 0;
-    transmitter_packets(fd_file, &start_packet, &end_packet, &data_packet);
+    transmitter_packets(fd_file, &start_packet, &end_packet, &data_packet, file_to_send);
 
     // Fragments of file to send
     unsigned char fragment[FRAG_SIZE];

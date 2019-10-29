@@ -1,6 +1,6 @@
 #include "packet.h"
 
-void transmitter_packets(int fd_file, ctrl_packet *start_packet, ctrl_packet *end_packet, data_packet *data_packet) {
+void transmitter_packets(int fd_file, ctrl_packet *start_packet, ctrl_packet *end_packet, data_packet *data_packet, char *file_to_send) {
   struct stat file_stat;
   if (fstat(fd_file, &file_stat) < 0) {
     message("Error reading file. Exitting.");
@@ -19,9 +19,9 @@ void transmitter_packets(int fd_file, ctrl_packet *start_packet, ctrl_packet *en
   sprintf(start_packet->size.value, "%ld", file_stat.st_size);
 
   start_packet->name.type = 1;
-  start_packet->name.length = strlen(basename(FILE_TO_SEND));
+  start_packet->name.length = strlen(basename(file_to_send));
   start_packet->name.value = malloc(start_packet->name.length);
-  sprintf(start_packet->name.value, "%s", basename(FILE_TO_SEND));
+  sprintf(start_packet->name.value, "%s", basename(file_to_send));
 
   end_packet->control = 3;
   end_packet->size.type = 0;
@@ -30,9 +30,9 @@ void transmitter_packets(int fd_file, ctrl_packet *start_packet, ctrl_packet *en
   sprintf(end_packet->size.value, "%ld", file_stat.st_size);
 
   end_packet->name.type = 1;
-  end_packet->name.length = strlen(basename(FILE_TO_SEND));
+  end_packet->name.length = strlen(basename(file_to_send));
   end_packet->name.value = malloc(end_packet->name.length);
-  sprintf(end_packet->name.value, "%s", basename(FILE_TO_SEND));
+  sprintf(end_packet->name.value, "%s", basename(file_to_send));
 }
 
 void receiver_packets(ctrl_packet *start_packet, ctrl_packet *end_packet, data_packet *data_packet) {

@@ -1,6 +1,5 @@
 #include "datalink.h"
 
-#define FILE_TO_SEND "images/pinguim.gif"
 #define CNTRL_START 2
 #define CNTRL_END 3
 #define FRAG_SIZE       (MAX_DATA_SIZE / 2 - 4)             // C N L1 L2 FRAG
@@ -27,7 +26,7 @@ typedef struct ctrl_packet {
     tlv_packet name;  // name of file
 } ctrl_packet;
 
-void transmitter_packets(int fd_file, ctrl_packet* start_packet, ctrl_packet* end_packet, data_packet* data_packet);
+void transmitter_packets(int fd_file, ctrl_packet* start_packet, ctrl_packet* end_packet, data_packet* data_packet, char *file_to_send);
 void receiver_packets(ctrl_packet* start_packet, ctrl_packet* end_packet, data_packet* data_packet);
 void packet_to_array(void* packet_void_ptr, char* buffer);
 void array_to_packet(void *packet_void_ptr, char *buffer);
