@@ -27,7 +27,7 @@ int main(int argc, char **argv) {
     port = COM2;
 
   // Stablish communication
-  message("Started llopen");
+  message("\n##############\nStarted llopen");
   application.fd_port = llopen(port, application.status);
   if (application.fd_port < 0) {
     perror("llopen");
@@ -56,7 +56,7 @@ int main(int argc, char **argv) {
     int numbytes, size_packet, n_chars_written;
 
     // Write information
-    message("Started llwrite");
+    message("\n##############\nStarted llwrite");
 
     // Send START packet
     memset(buffer, '\0', MAX_DATA_SIZE);
@@ -100,7 +100,7 @@ int main(int argc, char **argv) {
     receiver_packets(&start_packet, &end_packet, &data_packet);
 
     // Receive information
-    message("Started llread");
+    message("\n##############\nStarted llread");
 
     // Read START packet
     memset(read_buffer, '\0', MAX_DATA_SIZE);
@@ -137,7 +137,7 @@ int main(int argc, char **argv) {
   }
 
   // Finish communication
-  message("Started llclose");
+  message("\n##############\nStarted llclose");
   if (llclose(application.fd_port, application.status) < 0) {
     perror("llclose");
     return -1;
