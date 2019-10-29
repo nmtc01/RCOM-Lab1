@@ -131,12 +131,14 @@ int main(int argc, char **argv) {
 
     // Read fragments
     memset(read_buffer, '\0', MAX_DATA_SIZE);
-    while ((n_chars_read = llread(application.fd_port, read_buffer)) != 0) {
-      LTZ_RET(n_chars_read)
+	printf("###################\nPACKET NR %d\n", packet_nr);
 
+    while ((n_chars_read = llread(application.fd_port, read_buffer)) != 0) {
+      LTZ_RET(n_chars_read);
       if(read_buffer[0] != 3){
-        printf("###################\nPACKET NR %d\n", packet_nr);
-        packet_nr++;
+		if (n_chars_read != REJECT_DATA) 
+        	packet_nr++;
+
         array_to_packet(&data_packet, read_buffer);
         write(fd_file, read_buffer+4, n_chars_read-4);
       }
@@ -145,6 +147,8 @@ int main(int argc, char **argv) {
         break;
       }
       memset(read_buffer, '\0', MAX_DATA_SIZE);
+
+	  printf("###################\nPACKET NR %d\n", packet_nr);
     }
 
     close(fd_file);

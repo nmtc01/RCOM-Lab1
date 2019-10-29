@@ -61,12 +61,11 @@ int llwrite(int fd, unsigned char *buffer, int length) {
             alarm(0);
             fcntl(fd, F_SETFL, ~O_NONBLOCK);
 
-            if (!rej) {
-                //Change sequence number
-                if (!timed_out)
-                    datalink.sequenceNumber = (datalink.sequenceNumber + 1) % 2;
-                timed_out = 0;
-            }
+            //Change sequence number
+            if (!timed_out && !rej)
+               datalink.sequenceNumber = (datalink.sequenceNumber + 1) % 2;
+            timed_out = 0;
+
         } else
             break;
     }
@@ -943,13 +942,17 @@ int read_rr(int fd) {
             }
             case FINISH: {
                 break_read_loop = 1;
-                received_i = 1;
+				if (!rej)
+                	received_i = 1;
                 break;
             }
         }
     }
 
     printf("%02x%02x%02x%02x%02x - %d bytes read\n", rr[0], rr[1], rr[2], rr[3], rr[4], n_bytes);
+	
+	if (n_bytes < 5)
+	   rej = 1;
 
     return rej;
 }
