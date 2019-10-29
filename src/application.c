@@ -134,7 +134,7 @@ int main(int argc, char **argv) {
     while ((n_chars_read = llread(application.fd_port, read_buffer)) != 0) {
       LTZ_RET(n_chars_read)
 
-      if(read_buffer[0] == 1){
+      if(read_buffer[0] != 3){
         printf("###################\nPACKET NR %d\n", packet_nr);
         packet_nr++;
         array_to_packet(&data_packet, read_buffer);

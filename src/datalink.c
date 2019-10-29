@@ -71,6 +71,8 @@ int llwrite(int fd, unsigned char *buffer, int length) {
             break;
     }
 
+	n_timeouts = 0;
+
     //Stop execution if could not send trama I after MAX_TIMEOUTS
     if (!received_i)
         return -1;
