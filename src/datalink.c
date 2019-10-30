@@ -61,8 +61,13 @@ int llwrite(int fd, unsigned char *buffer, int length) {
             alarm(0);
             fcntl(fd, F_SETFL, ~O_NONBLOCK);
 
+            if (rej) {
+                timed_out = 0;
+                continue;
+            }
+
             //Change sequence number
-            if (!timed_out && !rej)
+            if (!timed_out)
                datalink.sequenceNumber = (datalink.sequenceNumber + 1) % 2;
             timed_out = 0;
 
@@ -90,6 +95,10 @@ int llread(int fd, unsigned char *buffer) {
         int res_rej = write_rej(fd);
     }
     else {
+        if(data_bytes == 1){
+            datalink.sequenceNumber = (datalink.sequenceNumber + 1) % 2;
+        }
+
         //Write trama RR
         minor_message("Writting Trama RR");
         int res_rr = write_rr(fd);
@@ -255,8 +264,8 @@ void timeout_handler() {
 int sendStablishTramas(int fd, int status) {
     //Install timeout handler
     (void)signal(SIGALRM, timeout_handler);
-    datalink.numTransmissions = 3;
-    datalink.timeout = 1;
+    datalink.numTransmissions = 5;
+    datalink.timeout = 3;
 
     if (status == TRANSMITTER) {
         //Transmitter
@@ -936,7 +945,6 @@ int read_rr(int fd) {
             }
         }
     }
-
 	if (n_bytes < 5)
 	   rej = 1;
 
