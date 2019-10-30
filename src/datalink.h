@@ -88,6 +88,8 @@ int llread(int fd, unsigned char* buffer);
 int llclose(int fd, int status);
 
 void message(char *message);
+void message_packet(int i);
+void minor_message(char *message);
 int open_port(int port);
 void set_flags(int fd);
 void cleanup(int fd);

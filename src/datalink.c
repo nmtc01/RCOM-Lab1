@@ -51,22 +51,21 @@ int llwrite(int fd, unsigned char *buffer, int length) {
     while (n_timeouts < datalink.numTransmissions) {
         if (!received_i) {
             //Write trama I
-            message("Writting Trama I");
+            minor_message("Writting Trama I");
             res_i = write_i(fd, buffer, length);
             alarm(datalink.timeout);
 
             //Read trama RR
-            message("Reading Trama RR");
+            minor_message("Reading Trama RR");
             int rej = read_rr(fd);
             alarm(0);
             fcntl(fd, F_SETFL, ~O_NONBLOCK);
 
-            if (!rej) {
-                //Change sequence number
-                if (!timed_out)
-                    datalink.sequenceNumber = (datalink.sequenceNumber + 1) % 2;
-                timed_out = 0;
-            }
+            //Change sequence number
+            if (!timed_out && !rej)
+               datalink.sequenceNumber = (datalink.sequenceNumber + 1) % 2;
+            timed_out = 0;
+
         } else
             break;
     }
@@ -82,17 +81,17 @@ int llwrite(int fd, unsigned char *buffer, int length) {
 
 int llread(int fd, unsigned char *buffer) {
   //Read trama I
-    message("Reading Trama I");
+    minor_message("Reading Trama I");
     int reject = 0;
     int data_bytes = read_i(fd, buffer, &reject);
     if (reject) {
         //Write trama REJ
-        message("Writting Trama REJ");
+        minor_message("Writting Trama REJ");
         int res_rej = write_rej(fd);
     }
     else {
         //Write trama RR
-        message("Writting Trama RR");
+        minor_message("Writting Trama RR");
         int res_rr = write_rr(fd);
 
         //Change sequence number
@@ -110,14 +109,14 @@ int llclose(int fd, int status) {
         while (n_timeouts < datalink.numTransmissions) {
             if (!received_disc) {
                 //Write disc
-                message("Writting disc");
+                minor_message("Writting disc");
                 int res_disc = write_disc(fd, status);
                 if (res_disc < 0)
                     return res_disc;
                 alarm(datalink.timeout);
 
                 //Read disc
-                message("Reading disc");
+                minor_message("Reading disc");
                 read_disc(fd, status);
                 alarm(0);
                 fcntl(fd, F_SETFL, ~O_NONBLOCK);
@@ -130,7 +129,7 @@ int llclose(int fd, int status) {
             return -1;
 
         //Write ua
-        message("Writting ua");
+        minor_message("Writting ua");
         int res_ua = write_ua(fd, status);
         if (res_ua < 0)
             return res_ua;
@@ -139,20 +138,20 @@ int llclose(int fd, int status) {
         //Receiver
 
         //Read disc
-        message("Reading disc");
+        minor_message("Reading disc");
         read_disc(fd, status);
 
         while (n_timeouts < datalink.numTransmissions) {
             if (!received_ua) {
                 //Write disc
-                message("Writting disc");
+                minor_message("Writting disc");
                 int res_disc = write_disc(fd, status);
                 if (res_disc < 0)
                     return res_disc;
                 alarm(datalink.timeout);
 
                 //Read ua
-                message("Reading ua");
+                minor_message("Reading ua");
                 read_ua(fd, status);
                 alarm(0);
                 fcntl(fd, F_SETFL, ~O_NONBLOCK);
@@ -167,7 +166,15 @@ int llclose(int fd, int status) {
 }
 
 void message(char *message) {
-    printf("!--%s\n", message);
+    printf("\n###################\n%s\n", message);
+}
+
+void minor_message(char *message) {
+    printf("%s\n", message);
+}
+
+void message_packet(int i) {
+    printf("###################\nPACKET NR %d\n", i);
 }
 
 int open_port(int port) {
@@ -257,14 +264,14 @@ int sendStablishTramas(int fd, int status) {
         while (n_timeouts < datalink.numTransmissions) {
             if (!received_ua) {
                 //Write set
-                message("Writting set");
+                minor_message("Writting set");
                 int res_set = write_set(fd);
                 if (res_set < 0)
                     return res_set;
                 alarm(datalink.timeout);
 
                 //Read ua
-                message("Reading ua");
+                minor_message("Reading ua");
                 read_ua(fd, status);
                 alarm(0);
                 fcntl(fd, F_SETFL, ~O_NONBLOCK);
@@ -280,11 +287,11 @@ int sendStablishTramas(int fd, int status) {
         //Receiver
 
         //Read set
-        message("Reading set");
+        minor_message("Reading set");
         read_set(fd);
 
         //Write ua
-        message("Writting ua");
+        minor_message("Writting ua");
         int res_ua = write_ua(fd, status);
     }
 
@@ -306,7 +313,6 @@ int write_set(int fd) {
     set[4] = FLAG;
 
     int res = write(fd, set, 5 * sizeof(char));
-    printf("%02x%02x%02x%02x%02x - %d bytes written\n", set[0], set[1], set[2], set[3], set[4], res);
 
     return res;
 }
@@ -397,8 +403,6 @@ void read_ua(int fd, int status) {
             }
         }
     }
-
-    printf("%02x%02x%02x%02x%02x - %d bytes read\n", ua[0], ua[1], ua[2], ua[3], ua[4], n_bytes);
 }
 
 void read_set(int fd) {
@@ -479,7 +483,6 @@ void read_set(int fd) {
             }
         }
     }
-    printf("%02x%02x%02x%02x%02x - %d bytes read\n", set[0], set[1], set[2], set[3], set[4], n_bytes);
 }
 
 int write_ua(int fd, int status) {
@@ -499,7 +502,6 @@ int write_ua(int fd, int status) {
 
     // WRITE
     int res = write(fd, ua, 5 * sizeof(char));
-    printf("%02x%02x%02x%02x%02x - %d bytes written\n", ua[0], ua[1], ua[2], ua[3], ua[4], res);
 
     return res;
 }
@@ -520,7 +522,6 @@ int write_disc(int fd, int status) {
     disc[4] = FLAG;
 
     int res = write(fd, disc, 5 * sizeof(char));
-    printf("%02x%02x%02x%02x%02x - %d bytes written\n", disc[0], disc[1], disc[2], disc[3], disc[4], res);
 
     return res;
 }
@@ -610,8 +611,6 @@ void read_disc(int fd, int status) {
             }
         }
     }
-
-    printf("%02x%02x%02x%02x%02x - %d bytes read\n", disc[0], disc[1], disc[2], disc[3], disc[4], n_bytes);
 }
 
 void cleanup(int fd) {
@@ -671,11 +670,6 @@ int write_i(int fd, char *buffer, int length) {
 
     //Write trama I
     int res = write(fd, stuff, nr_bytes);
-
-    /*for (int i = 0; i < nr_bytes-1; i++) {
-        printf("%02x", stuff[i]);
-    }
-    printf("%02x - %d data bytes written\n", stuff[nr_bytes-1], length);*/
 
     return length;
 }
@@ -770,7 +764,6 @@ int read_i(int fd, char *buffer, int *reject) {
                 } else if (read_char[0] == ESCAPE) {
                     receiving_data_state = ESCAPE_RCV_I;
                 } else {
-                    if(trama[n_bytes+1] == FLAG) break;
                     data[data_bytes] = trama[n_bytes];
                     n_bytes++;
                     data_bytes++;
@@ -825,11 +818,6 @@ int read_i(int fd, char *buffer, int *reject) {
         data_bytes = REJECT_DATA;
     }
 
-    /*for (int i = 0; i < n_bytes-1; i++) {
-        printf("%02x", trama[i]);
-    }
-    printf("%02x - %d data bytes read\n", trama[n_bytes-1], data_bytes);*/
-
     return data_bytes;
 }
 
@@ -849,7 +837,6 @@ int write_rr(int fd) {
     rr[4] = FLAG;
 
     int res = write(fd, rr, 5 * sizeof(char));
-    printf("%02x%02x%02x%02x%02x - %d bytes written\n", rr[0], rr[1], rr[2], rr[3], rr[4], res);
 
     return res;
 }
@@ -943,13 +930,15 @@ int read_rr(int fd) {
             }
             case FINISH: {
                 break_read_loop = 1;
-                received_i = 1;
+				if (!rej)
+                	received_i = 1;
                 break;
             }
         }
     }
 
-    printf("%02x%02x%02x%02x%02x - %d bytes read\n", rr[0], rr[1], rr[2], rr[3], rr[4], n_bytes);
+	if (n_bytes < 5)
+	   rej = 1;
 
     return rej;
 }
@@ -970,7 +959,6 @@ int write_rej(int fd) {
     rej[4] = FLAG;
 
     int res = write(fd, rej, 5 * sizeof(char));
-    printf("%02x%02x%02x%02x%02x - %d bytes written\n", rej[0], rej[1], rej[2], rej[3], rej[4], res);
 
     return res;
 }

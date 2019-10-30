@@ -9,7 +9,7 @@ C_FILES := $(wildcard $(SRCDIR)/*.c)
 BUILDDIR = build
 OBJS := application.c datalink.c packet.c
 
-all: $(PROGRAM) 
+all: $(PROGRAM)
 
 $(PROGRAM): .depend $(OBJS)
 	$(CC) $(OBJS) -o $(PROGRAM)
