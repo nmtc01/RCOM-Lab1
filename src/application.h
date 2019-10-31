@@ -14,10 +14,12 @@
 #define LTZ_RET(n)      if((n) < 0){ return -1;}
 
 //Application struct
-struct appLayer {
+typedef struct appLayer {
     int fd_port;
     int status;
-};
+} appLayer;
 
 
-void setup(int argc, char** argv);
+void setup(int argc, char** argv, appLayer *application, int *port);
+int transmitter(appLayer *application);
+int receiver(appLayer *application);
