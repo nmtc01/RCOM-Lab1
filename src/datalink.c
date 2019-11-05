@@ -108,6 +108,7 @@ int llread(int fd, unsigned char *buffer) {
             datalink.sequenceNumber = (datalink.sequenceNumber + 1) % 2;
         timed_out = 0;
     }
+    generate_errors(buffer);
     return data_bytes;
 }
 
@@ -970,3 +971,15 @@ int write_rej(int fd) {
 
     return res;
 }
+
+void generate_errors(unsigned char* buffer){
+    // head
+    if(!(rand()%ERROR_PROB)){
+        buffer[1]++;
+    }
+    // data
+    if(!(rand()%ERROR_PROB)){
+        buffer[4]++;
+    }
+}
+

@@ -17,9 +17,14 @@
 typedef struct appLayer {
     int fd_port;
     int status;
+    clock_t start_clock;
+    clock_t end_clock;
+    int file_size;
 } appLayer;
 
 
 void setup(int argc, char** argv, appLayer *application, int *port);
 int transmitter(appLayer *application);
 int receiver(appLayer *application);
+void display_eficiency();
+
