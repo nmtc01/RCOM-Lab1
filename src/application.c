@@ -48,11 +48,12 @@ int main(int argc, char **argv) {
 
   // Show statistics
   message("Show Statistics");
-  printf("File size: %d\n", application.file_size);
-  printf("File submission time: %4.3f\n",(double)(end-start)/ticks);
-  printf("Rate (R): %f\n", (application.file_size*8)/((double)(end-start)/ticks));
-  printf("Baud Rate (C): %f\n", BAUD_VALUE);
-  printf("S: %f\n", ((application.file_size*8)/((double)(end-start)/ticks))/38400.0);
+  printf("Error probability: \t1/%d\n", ERROR_PROB);
+  printf("File size: \t\t%d\n", application.file_size);
+  printf("File submission time:  \t%4.3f\n",(double)(end-start)/ticks);
+  printf("Rate (R): \t\t%f\n", (application.file_size*8)/((double)(end-start)/ticks));
+  printf("Baud Rate (C):  \t%f\n", BAUD_VALUE);
+  printf("S: \t\t\t%f\n", ((application.file_size*8)/((double)(end-start)/ticks))/38400.0);
 
   message("Finishing program");
   return 0;
