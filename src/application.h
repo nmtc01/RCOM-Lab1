@@ -17,6 +17,7 @@
 typedef struct appLayer {
     int fd_port;
     int status;
+	int file_size;
 } appLayer;
 
 

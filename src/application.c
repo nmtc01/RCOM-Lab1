@@ -19,7 +19,7 @@ int main(int argc, char **argv) {
   message("Started llopen");
   application.fd_port = llopen(port, application.status);
   LTZ_RET(application.fd_port)
-  
+
   //Counting time
   clock_t start, end;
   struct tms t;
@@ -47,7 +47,9 @@ int main(int argc, char **argv) {
 
   // Show statistics
   message("Show Statistics");
+  printf("File size: %d\n", application.file_size);
   printf("File submission time: %4.3f\n",(double)(end-start)/ticks);
+  printf("Rate (R):  ");
 
   message("Finishing program");
   return 0;
@@ -100,6 +102,7 @@ int transmitter(appLayer *application) {
   data_packet data_packet;
   int packet_nr = 0;
   transmitter_packets(fd_file, &start_packet, &end_packet, &data_packet, file_to_send);
+  application.file_size = atoi(start_packet.size.value);
 
   // Fragments of file to send
   unsigned char fragment[FRAG_SIZE];
@@ -152,6 +155,7 @@ int receiver(appLayer *application) {
   int n_chars_read, size, packet_nr = 0, fd_file;
 
   receiver_packets(&start_packet, &end_packet, &data_packet);
+  application.file_size = atoi(start_packet.size.value);
 
   // Receive information
   message("Started llread");
