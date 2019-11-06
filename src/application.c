@@ -19,6 +19,14 @@ int main(int argc, char **argv) {
   message("Started llopen");
   application.fd_port = llopen(port, application.status);
   LTZ_RET(application.fd_port)
+  
+  //Counting time
+  clock_t start, end;
+  struct tms t;
+  long ticks = sysconf(_SC_CLK_TCK);
+
+  //Start counting time
+  start = times(&t);
 
   // Main Communication
   if (application.status == TRANSMITTER) {
@@ -27,7 +35,10 @@ int main(int argc, char **argv) {
     LTZ_RET(receiver(&application))
   }
 
-  application.end_clock = clock();
+  //Finish counting time
+  end = times(&t);
+
+  printf("File submission time: %4.2f\n",(double)(end-start)/ticks);
 
   // Finish communication
   message("Started llclose");
@@ -35,8 +46,6 @@ int main(int argc, char **argv) {
     perror("llclose");
     return -1;
   }
-
-  display_eficiency(application);
 
   message("Finishing program");
   return 0;
@@ -70,8 +79,6 @@ void setup(int argc, char **argv, appLayer *application, int *port) {
     *port = COM4;
   else
     *port = COM5;
-
-  srand(time(NULL));
 }
 
 int transmitter(appLayer *application) {
@@ -91,7 +98,6 @@ int transmitter(appLayer *application) {
   data_packet data_packet;
   int packet_nr = 0;
   transmitter_packets(fd_file, &start_packet, &end_packet, &data_packet, file_to_send);
-  application->file_size = atoi(start_packet.size.value);
 
   // Fragments of file to send
   unsigned char fragment[FRAG_SIZE];
@@ -109,6 +115,7 @@ int transmitter(appLayer *application) {
 
   // Read fragments and send them one by one
   memset(buffer, '\0', MAX_DATA_SIZE);
+
   while ((numbytes = read(fd_file, fragment, FRAG_SIZE)) != 0) {
     LTZ_RET(numbytes)
 
@@ -154,11 +161,9 @@ int receiver(appLayer *application) {
   array_to_packet(&start_packet, read_buffer);
 
   // Create file
-  fd_file = open(start_packet.name.value, O_WRONLY | O_CREAT | O_TRUNC | O_APPEND, 0664);
+  fd_file = open(start_packet.name.value,
+                 O_WRONLY | O_CREAT | O_TRUNC | O_APPEND, 0664);
   LTZ_RET(fd_file)
-
-  application->file_size = atoi(start_packet.size.value);
-  application->start_clock = clock();
 
   // Read fragments
   memset(read_buffer, '\0', MAX_DATA_SIZE);
@@ -184,15 +189,3 @@ int receiver(appLayer *application) {
   close(fd_file);
   return 0;
 }
-
-void display_eficiency(appLayer app){
-  printf("\n=========================\n");
-  printf("error prob.      \t1/%d+1/%d\t\n"         , ERROR_PROB, ERROR_PROB);
-  printf("file size        \t%d       \tbytes\n"    , app.file_size);
-  printf("frame size       \t%d       \tbytes\n"    , MAX_FRAME_SIZE);
-  printf("total time       \t%.2f     \ts\n"        , (float)(app.end_clock - app.start_clock)/CLOCKS_PER_SEC);
-  printf("transfer rate    \t%.2f     \tb/s\n"      , (float)(app.file_size*8/(app.end_clock - app.start_clock)));
-  printf("efficiency       \t%.2f     \tb/s\n"      , (float)(app.file_size*8/(app.end_clock - app.start_clock)/BAUD_VALUE) );
-
-}
-

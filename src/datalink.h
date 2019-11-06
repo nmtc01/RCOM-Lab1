@@ -16,42 +16,37 @@
 #include <sys/types.h>
 #include <termios.h>
 #include <unistd.h>
-#include <time.h>
+#include <sys/times.h>
 
-#define TRANSMITTER 12
-#define RECEIVER 21
-#define COM1 0
-#define COM2 1
-#define COM3 2
-#define COM4 3
-#define COM5 4
-
-// EFICIENCY
-#define ERROR_PROB 5
-#define BAUDRATE B38400
-#define BAUD_VALUE 38400
-#define MAX_FRAME_SIZE 512
-#define MAX_DATA_SIZE (MAX_FRAME_SIZE - 6)
+#define BAUDRATE        B38400
+#define MAX_FRAME_SIZE  512
+#define MAX_DATA_SIZE   (MAX_FRAME_SIZE - 6)
+#define TRANSMITTER     12
+#define RECEIVER        21
+#define COM1            0
+#define COM2            1
+#define COM3            2
+#define COM4            3
+#define COM5            4
 
 // FLAGS
-#define FLAG 0x7E
-#define A_CMD 0x03
-#define A_ANS 0x01
-#define C_SET 0x03
-#define C_UA 0x07
-#define C_DISC 0x0B
-#define C_0 0x00
-#define C_1 0x40
-#define C_RR0 0x05
-#define C_RR1 0x85
-#define C_REJ0 0x01
-#define C_REJ1 0x81
-#define ESCAPE 0x7D
-#define STUF 0x20
-#define REJECT_DATA 1
+#define FLAG            0x7E
+#define A_CMD           0x03
+#define A_ANS           0x01
+#define C_SET           0x03
+#define C_UA            0x07
+#define C_DISC          0x0B
+#define C_0             0x00
+#define C_1             0x40
+#define C_RR0           0x05
+#define C_RR1           0x85
+#define C_REJ0          0x01
+#define C_REJ1          0x81
+#define ESCAPE          0x7D
+#define STUF            0x20
+#define REJECT_DATA     1
 
-enum state
-{
+enum state {
     START,
     FLAG_RCV,
     A_RCV,
@@ -60,8 +55,7 @@ enum state
     FINISH
 };
 
-enum dataState
-{
+enum dataState {
     START_I,
     FLAG_RCV_I,
     A_RCV_I,
@@ -74,8 +68,7 @@ enum dataState
 };
 
 //Datalinker struct
-struct linkLayer
-{
+struct linkLayer {
     char port[11];
     int baudRate;
     unsigned int sequenceNumber;
@@ -87,10 +80,10 @@ struct linkLayer
 int llopen(int port, int status);
 
 //Write
-int llwrite(int fd, unsigned char *packet, int length);
+int llwrite(int fd, unsigned char* packet, int length);
 
 //Read
-int llread(int fd, unsigned char *buffer);
+int llread(int fd, unsigned char* buffer);
 
 //Close
 int llclose(int fd, int status);
@@ -116,7 +109,3 @@ int read_i(int fd, char *buffer, int *reject);
 int write_rr(int fd);
 int read_rr(int fd);
 int write_rej(int fd);
-
-// Eficiency
-void generate_errors(unsigned char* buffer);
-
