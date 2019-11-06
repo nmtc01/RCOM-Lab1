@@ -130,14 +130,3 @@ void array_to_packet(void *packet_void_ptr, char *buffer) {
     break;
   }
 }
-
-void generate_errors(unsigned char* buffer){
-    // head
-    if(!(rand()%ERROR_PROB)){
-        buffer[1]++;
-    }
-    // data
-    if(!(rand()%ERROR_PROB)){
-        buffer[4]++;
-    }
-}

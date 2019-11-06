@@ -116,4 +116,4 @@ int read_rr(int fd);
 int write_rej(int fd);
 
 // Eficiency
-void generate_errors(unsigned char* buffer);
+void generate_errors(unsigned char* buffer, int i);

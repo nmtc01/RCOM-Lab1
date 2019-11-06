@@ -111,7 +111,7 @@ int llread(int fd, unsigned char *buffer) {
             datalink.sequenceNumber = (datalink.sequenceNumber + 1) % 2;
         timed_out = 0;
     }
-    generate_errors(buffer);
+
     return data_bytes;
 }
 
@@ -756,6 +756,7 @@ int read_i(int fd, char *buffer, int *reject) {
                     receiving_data_state = START_I;
                     n_bytes = 0;
                 }
+                generate_errors(buffer, 1);
                 break;
             }
             case BCC1_OK_I: {
@@ -799,6 +800,7 @@ int read_i(int fd, char *buffer, int *reject) {
                 break;
             }
             case FINISH_I: {
+                generate_errors(buffer, 2);
                 break_read_loop = 1;
                 received_i = 1;
                 break;
@@ -973,4 +975,19 @@ int write_rej(int fd) {
     int res = write(fd, rej, 5 * sizeof(char));
 
     return res;
+}
+
+void generate_errors(unsigned char* buffer, int i){
+    if (i == 1) {
+      // head
+      if(!(rand()%ERROR_PROB)){
+          buffer[i]++;
+      }
+    }
+    else {
+      // data
+      if(!(rand()%ERROR_PROB)){
+          buffer[i+2]++;
+      }
+    }
 }
