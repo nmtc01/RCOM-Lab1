@@ -35,10 +35,8 @@ int main(int argc, char **argv) {
     LTZ_RET(receiver(&application))
   }
 
-  //Finish counting time
+  // Finish counting time
   end = times(&t);
-
-  printf("File submission time: %4.2f\n",(double)(end-start)/ticks);
 
   // Finish communication
   message("Started llclose");
@@ -46,6 +44,10 @@ int main(int argc, char **argv) {
     perror("llclose");
     return -1;
   }
+
+  // Show statistics
+  message("Show Statistics");
+  printf("File submission time: %4.3f\n",(double)(end-start)/ticks);
 
   message("Finishing program");
   return 0;
