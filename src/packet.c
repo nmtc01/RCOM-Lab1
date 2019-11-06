@@ -75,7 +75,8 @@ void packet_to_array(void *packet_void_ptr, char *buffer) {
     buffer[0] = ctrl_packet_ptr->control;
     buffer[1] = ctrl_packet_ptr->size.type;
     buffer[2] = ctrl_packet_ptr->size.length;
-    memcpy((buffer + 3), ctrl_packet_ptr->size.value, sizeof(int));
+    memcpy((buffer + 3), ctrl_packet_ptr->size.value, sizeof(int)+1);
+
     buffer[3 + ctrl_packet_ptr->size.length] = ctrl_packet_ptr->name.type;
     buffer[4 + ctrl_packet_ptr->size.length] = ctrl_packet_ptr->name.length;
     memcpy((buffer + 5 + ctrl_packet_ptr->size.length), ctrl_packet_ptr->name.value, ctrl_packet_ptr->name.length);

@@ -49,7 +49,9 @@ int main(int argc, char **argv) {
   message("Show Statistics");
   printf("File size: %d\n", application.file_size);
   printf("File submission time: %4.3f\n",(double)(end-start)/ticks);
-  printf("Rate (R):  ");
+  printf("Rate (R): %f\n", (application.file_size*8)/((double)(end-start)/ticks));
+  printf("Baud Rate (C): %f\n", 38400.0);
+  printf("S: %f\n", ((application.file_size*8)/((double)(end-start)/ticks))/38400.0);
 
   message("Finishing program");
   return 0;
@@ -115,6 +117,7 @@ int transmitter(appLayer *application) {
   // Send START packet
   memset(buffer, '\0', MAX_DATA_SIZE);
   packet_to_array(&start_packet, buffer);
+  printf("\n\nsize = %d\n\n", atoi(buffer + 3));
   n_chars_written = llwrite(application->fd_port, buffer, START_SIZE);
   LTZ_RET(n_chars_written)
 
