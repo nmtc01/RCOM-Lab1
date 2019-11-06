@@ -155,7 +155,6 @@ int receiver(appLayer *application) {
   int n_chars_read, size, packet_nr = 0, fd_file;
 
   receiver_packets(&start_packet, &end_packet, &data_packet);
-  application->file_size = atoi(start_packet.size.value);
 
   // Receive information
   message("Started llread");
@@ -188,6 +187,8 @@ int receiver(appLayer *application) {
       break;
     }
     memset(read_buffer, '\0', MAX_DATA_SIZE);
+
+    application->file_size = atoi(start_packet.size.value);
 
     message_packet(packet_nr);
   }
