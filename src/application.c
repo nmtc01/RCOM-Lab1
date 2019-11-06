@@ -8,6 +8,11 @@
 
 #include "application.h"
 
+//Counting time
+clock_t start, end;
+struct tms t;
+long ticks;
+
 int main(int argc, char **argv) {
   message("Starting program");
   // Validate arguments
@@ -20,13 +25,7 @@ int main(int argc, char **argv) {
   application.fd_port = llopen(port, application.status);
   LTZ_RET(application.fd_port)
 
-  //Counting time
-  clock_t start, end;
-  struct tms t;
-  long ticks = sysconf(_SC_CLK_TCK);
-
-  //Start counting time
-  start = times(&t);
+  ticks = sysconf(_SC_CLK_TCK);
 
   // Main Communication
   if (application.status == TRANSMITTER) {
@@ -114,6 +113,9 @@ int transmitter(appLayer *application) {
   // Write information
   message("Started llwrite");
 
+  //Start counting time
+  start = times(&t);
+
   // Send START packet
   memset(buffer, '\0', MAX_DATA_SIZE);
   packet_to_array(&start_packet, buffer);
@@ -161,6 +163,9 @@ int receiver(appLayer *application) {
 
   // Receive information
   message("Started llread");
+
+  //Start counting time
+  start = times(&t);
 
   // Read START packet
   memset(read_buffer, '\0', MAX_DATA_SIZE);
