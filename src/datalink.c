@@ -85,6 +85,9 @@ int llwrite(int fd, unsigned char *buffer, int length) {
 }
 
 int llread(int fd, unsigned char *buffer) {
+  //Testing T_Prop
+  sleep(0);
+
   //Read trama I
     minor_message("Reading Trama I");
     int reject = 0;
@@ -108,6 +111,7 @@ int llread(int fd, unsigned char *buffer) {
             datalink.sequenceNumber = (datalink.sequenceNumber + 1) % 2;
         timed_out = 0;
     }
+    generate_errors(buffer);
     return data_bytes;
 }
 

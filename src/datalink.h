@@ -17,6 +17,11 @@
 #include <termios.h>
 #include <unistd.h>
 #include <sys/times.h>
+#include <time.h>
+
+//Efficiency
+#define ERROR_PROB 5
+#define BAUD_VALUE 38400.0
 
 #define BAUDRATE        B38400
 #define MAX_FRAME_SIZE  512
@@ -109,3 +114,6 @@ int read_i(int fd, char *buffer, int *reject);
 int write_rr(int fd);
 int read_rr(int fd);
 int write_rej(int fd);
+
+// Eficiency
+void generate_errors(unsigned char* buffer);

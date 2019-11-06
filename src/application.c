@@ -25,6 +25,8 @@ int main(int argc, char **argv) {
   application.fd_port = llopen(port, application.status);
   LTZ_RET(application.fd_port)
 
+  //Efficiency stuff
+  srand(time(NULL));
   ticks = sysconf(_SC_CLK_TCK);
 
   // Main Communication
@@ -49,7 +51,7 @@ int main(int argc, char **argv) {
   printf("File size: %d\n", application.file_size);
   printf("File submission time: %4.3f\n",(double)(end-start)/ticks);
   printf("Rate (R): %f\n", (application.file_size*8)/((double)(end-start)/ticks));
-  printf("Baud Rate (C): %f\n", 38400.0);
+  printf("Baud Rate (C): %f\n", BAUD_VALUE);
   printf("S: %f\n", ((application.file_size*8)/((double)(end-start)/ticks))/38400.0);
 
   message("Finishing program");
