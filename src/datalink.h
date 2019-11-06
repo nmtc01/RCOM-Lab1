@@ -20,7 +20,7 @@
 #include <time.h>
 
 //Efficiency
-#define ERROR_PROB 5
+#define ERROR_PROB 10
 #define BAUD_VALUE 38400.0
 
 #define BAUDRATE        B38400

@@ -86,7 +86,7 @@ int llwrite(int fd, unsigned char *buffer, int length) {
 
 int llread(int fd, unsigned char *buffer) {
   //Testing T_Prop
-  sleep(0);
+  usleep(0);
 
   //Read trama I
     minor_message("Reading Trama I");
@@ -650,11 +650,18 @@ int write_i(int fd, char *buffer, int length) {
         trama[2] = C_0;
     trama[3] = A_CMD ^ trama[2];
 
+    //Efficiency FER
+    //generate_errors(trama, 3);
+
     for (int i = 0; i < length; i++) {
         trama[4 + i] = buffer[i];
         bcc2 = bcc2 ^ buffer[i];
     }
     trama[4 + length] = bcc2;
+
+    //Efficiency FER
+    //generate_errors(trama, 4+length);
+    
     trama[5 + length] = FLAG;
 
     //Stuffing
@@ -756,7 +763,6 @@ int read_i(int fd, char *buffer, int *reject) {
                     receiving_data_state = START_I;
                     n_bytes = 0;
                 }
-                generate_errors(buffer, 1);
                 break;
             }
             case BCC1_OK_I: {
@@ -800,7 +806,6 @@ int read_i(int fd, char *buffer, int *reject) {
                 break;
             }
             case FINISH_I: {
-                generate_errors(buffer, 2);
                 break_read_loop = 1;
                 received_i = 1;
                 break;
@@ -978,16 +983,7 @@ int write_rej(int fd) {
 }
 
 void generate_errors(unsigned char* buffer, int i){
-    if (i == 1) {
-      // head
-      if(!(rand()%ERROR_PROB)){
-          buffer[i]++;
-      }
-    }
-    else {
-      // data
-      if(!(rand()%ERROR_PROB)){
-          buffer[i+2]++;
-      }
+    if(!(rand()%ERROR_PROB)){
+        buffer[i] = 0x00;
     }
 }

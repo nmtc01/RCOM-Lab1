@@ -122,7 +122,7 @@ int transmitter(appLayer *application) {
   // Send START packet
   memset(buffer, '\0', MAX_DATA_SIZE);
   packet_to_array(&start_packet, buffer);
-  printf("\n\nsize = %d\n\n", atoi(buffer + 3));
+  
   n_chars_written = llwrite(application->fd_port, buffer, START_SIZE);
   LTZ_RET(n_chars_written)
 
@@ -167,9 +167,6 @@ int receiver(appLayer *application) {
   // Receive information
   message("Started llread");
 
-  //Start counting time
-  start = times(&t);
-
   // Read START packet
   memset(read_buffer, '\0', MAX_DATA_SIZE);
   n_chars_read = llread(application->fd_port, read_buffer);
@@ -184,6 +181,9 @@ int receiver(appLayer *application) {
   // Read fragments
   memset(read_buffer, '\0', MAX_DATA_SIZE);
   message_packet(packet_nr);
+
+  //Start counting time
+  start = times(&t);
 
   while ((n_chars_read = llread(application->fd_port, read_buffer)) != 0) {
     LTZ_RET(n_chars_read);
