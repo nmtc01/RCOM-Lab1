@@ -102,7 +102,7 @@ int transmitter(appLayer *application) {
   data_packet data_packet;
   int packet_nr = 0;
   transmitter_packets(fd_file, &start_packet, &end_packet, &data_packet, file_to_send);
-  application.file_size = atoi(start_packet.size.value);
+  application->file_size = atoi(start_packet.size.value);
 
   // Fragments of file to send
   unsigned char fragment[FRAG_SIZE];
@@ -155,7 +155,7 @@ int receiver(appLayer *application) {
   int n_chars_read, size, packet_nr = 0, fd_file;
 
   receiver_packets(&start_packet, &end_packet, &data_packet);
-  application.file_size = atoi(start_packet.size.value);
+  application->file_size = atoi(start_packet.size.value);
 
   // Receive information
   message("Started llread");
