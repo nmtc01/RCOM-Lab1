@@ -86,7 +86,7 @@ int llwrite(int fd, unsigned char *buffer, int length) {
 
 int llread(int fd, unsigned char *buffer) {
   //Testing T_Prop
-  usleep(0);
+  //usleep(0);
 
   //Read trama I
     minor_message("Reading Trama I");
